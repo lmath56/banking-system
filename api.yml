@@ -1,0 +1,701 @@
+openapi: 3.0.3
+info:
+  title: Banking API
+  description: |-
+    Lucas Mathews - Fontys Student ID: 5023572
+  contact:
+    email: 522499@student.fontys.nl
+  version: 2.0.0
+servers:
+  - url: http://127.0.0.1:81
+tags:
+  - name: client
+    description: Operations for Client Accounts
+  - name: account
+    description: Operations for Bank Accounts
+  - name: transaction
+    description: Operations for Transactions
+  - name: manager
+    description: Operations for Bank Managers
+paths:
+  /Client/Login:
+    post:
+      tags:
+        - client
+      summary: Log in to the system
+      description: Log in to the system
+      operationId: manager.login_user
+      requestBody:
+        description: Credentials for logging in
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Invalid username/password supplied
+        '401':
+          description: Unauthorized
+  /Client/Logout:
+    post:
+      tags:
+        - client
+      summary: Log out from the system
+      description: Log out from the system
+      operationId: manager.logout_user
+      responses:
+        '200':
+          description: Successful operation
+        '401':
+          description: Unauthorized
+  /Client/Password:
+    put:
+      tags:
+        - client
+      summary: Change password
+      description: Change password
+      operationId: manager.change_password
+      parameters:
+        - name: client_id
+          in: query
+          description: ID of client to change password
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: password
+          in: query
+          description: New password
+          required: true
+          schema:
+            type: string
+        - name: new_password
+          in: query
+          description: New password
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Old password incorrect
+        '404':
+          description: client_id not found
+  /Client:
+    post:
+      tags:
+        - client
+      summary: Add a new client 
+      description: Add a new client to the system
+      operationId: manager.add_client
+      parameters:
+        - name: name
+          in: query
+          description: Client Name
+          required: true
+          schema:
+            type: string
+        - name: birthdate
+          in: query
+          description: Client Birthdate (dd-mm-yyyy)
+          required: true
+          schema:
+            type: string
+        - name: address
+          in: query
+          description: Client Address
+          required: false
+          schema:
+            type: string
+        - name: phone_number
+          in: query
+          description: Client Phone Number
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Client Email Address
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: Client Email Address
+          required: true
+          schema:
+            type: string
+        - name: notes
+          in: query
+          description: Notes about client
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Client created"
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - client
+      summary: Update an existing client
+      description: Update an existing client Id
+      operationId: manager.update_client
+      requestBody:
+        description: Update an existing client's details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Invalid Client ID supplied
+        '404':
+          description: Client not found
+        '422':
+          description: Validation exception
+    get:
+      tags:
+        - client
+      summary: Get a client by ID
+      description: Get a client by ID
+      operationId: manager.get_client
+      parameters:
+        - name: client_id
+          in: query
+          description: ID of client to return
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Invalid Client ID supplied
+        '404':
+          description: Client not found
+    delete:
+      tags:
+        - client
+      summary: Delete a client by ID
+      description: Delete a client by ID
+      operationId: manager.delete_client
+      parameters:
+        - name: client_id
+          in: query
+          description: ID of client to delete
+          required: true
+          schema:
+            type: string
+            format: int32
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid Client ID supplied
+        '404':
+          description: Client not found
+  /Account:
+    post:
+      tags:
+        - account
+      summary: Add a new account
+      description: Add a new account to the system
+      operationId: manager.add_account
+      parameters:
+        - name: description
+          in: query
+          description: Account description
+          required: true
+          schema:
+            type: string
+        - name: account_type
+          in: query
+          description: Type of account
+          required: true
+          schema:
+            type: string
+        - name: notes
+          in: query
+          description: Notes about account
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - account
+      summary: Update an existing account
+      description: Update an existing account
+      operationId: manager.update_account
+      parameters:
+        - name: account_id
+          in: query
+          description: ID of account to update
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: Update an existing account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid Account ID supplied
+        '404':
+          description: Account not found
+        '422':
+          description: Validation exception
+    get:
+      tags:
+        - account
+      summary: Get an account by ID
+      description: Get an account by ID
+      operationId: manager.get_account
+      parameters:
+        - name: account_id
+          in: query
+          description: ID of account to return
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid Account ID supplied
+        '404':
+          description: Account not found
+    delete:
+      tags:
+        - account
+      summary: Delete an account by ID
+      description: Delete an account by ID
+      operationId: manager.delete_account
+      parameters:
+        - name: account_id
+          in: query
+          description: ID of account to delete
+          required: true
+          schema:
+            type: string
+            format: int32
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid account_id supplied
+        '404':
+          description: Account not found
+  /Transaction:
+    get: 
+      tags:
+        - transaction
+      summary: Get a transaction by ID
+      description: Get a transaction by ID
+      operationId: manager.get_transaction
+      parameters:
+        - name: transaction_id
+          in: query
+          description: ID of transaction to return
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Invalid Transaction ID supplied
+        '404':
+          description: Transaction not found
+    post:
+      tags:
+        - transaction
+      summary: Add a new transaction
+      description: Add a new transaction to the system
+      operationId: manager.add_transaction
+      parameters:
+        - name: amount
+          in: query
+          description: Amount of transaction
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: account_from
+          in: query
+          description: Account number the money paid from
+          required: true
+          schema:
+            type: string
+        - name: account_to
+          in: query
+          description: Recipient account number
+          required: true
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: Description of transaction
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /Transaction/History:
+    get:
+      tags:
+        - transaction
+      summary: Get transaction history
+      description: Get transaction history
+      operationId: manager.transaction_history
+      parameters:
+        - name: account_id
+          in: query
+          description: ID of account to return
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Invalid input
+        '404':
+          description: No transactions found
+  /Manager/Interest:
+    post:
+      tags:
+        - manager
+      summary: Apply interest
+      description: Apply interest to account
+      operationId: manager.apply_interest
+      requestBody:
+        description: Apply interest to account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - manager
+      summary: Apply fee
+      description: Apply fee to account
+      operationId: manager.apply_fee
+      requestBody:
+        description: Apply fee to account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /Manager/Clients:  
+    get:
+      tags:
+        - manager
+      summary: Get all clients
+      description: Get all clients
+      operationId: manager.get_all_clients
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Invalid input
+        '404':
+          description: No clients found
+  /Manager/Accounts:
+    get:
+      tags:
+        - manager
+      summary: Get all accounts
+      description: Get all accounts
+      operationId: manager.get_all_accounts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid input
+        '404':
+          description: No accounts found
+  /Manager/Transactions:
+    get:
+      tags:
+        - manager
+      summary: Get all transactions
+      description: Get all transactions
+      operationId: manager.get_all_transactions
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Invalid input
+        '404':
+          description: No transactions found
+    put:
+      tags:
+        - manager
+      summary: Update an existing transaction
+      description: Update an existing transaction
+      operationId: manager.update_transaction
+      requestBody:
+        description: Update an existing transaction
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Invalid Transaction ID supplied
+        '404':
+          description: Transaction not found
+        '422':
+          description: Validation exception
+  /Manager/Hash:
+    get:
+      tags:
+        - manager
+      summary: Hash password
+      description: Pass a string through the hashing algorithm
+      operationId: manager.password_hash
+      parameters:
+        - name: password
+          in: query
+          description: Password to hash
+          required: true
+          schema:
+            type: string        
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+  /Manager/Timestamp:
+      get:
+        tags:
+          - manager
+        summary: Get the timestamp
+        description: Gets the date and time in the appropriate format
+        operationId: manager.timestamp   
+        responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: string
+          '400':
+            description: Invalid input
+          '401':
+            description: Unauthorized
+components:
+  schemas:
+    Client:
+      type: object
+      properties:
+        client_id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        birthdate:
+          type: string
+        opening_timestamp:
+          type: string
+        address:
+          type: string
+        phone_number:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        notes:
+          type: string
+        enabled:
+          type: boolean
+        administator:
+          type: boolean
+        accounts:
+          type: array
+      example:
+        client_id: 1
+        name: "Lucas Mathews"
+        birthdate: "21-05-1980"
+        opening_timestamp: "17-04-2022 16:21:12"
+        address: "Rachelsmolen 1, 5612MA, Eindhoven"
+        phone_number: "0612345678"
+        email: "john.d@fontys.nl"
+        password: "password"
+        notes: "This is a test client"
+        enabled: true
+        administator: false
+        accounts: []
+    Account: 
+      type: object
+      properties:
+        account_id:
+          type: integer
+          format: int32
+        decription:
+          type: string
+        opening_timestamp:
+          type: string
+        account_type:
+          type: string
+        balance:
+          type: number
+        enabled:
+          type: boolean
+        notes:
+          type: string
+        transactons:
+          type: array
+      example:
+        account_id: 1
+        description: "Savings Account"
+        opening_timestamp: "17-04-2022 16:21:12"
+        account_type: "Rachelsmolen 1, 5612MA, Eindhoven"
+        balance: 2314.23
+        enabled: true
+        notes: "This is a savings account"
+        transactions: []
+    Transaction:
+      type: object
+      properties:
+        transaction_id:
+          type: integer
+          format: int32
+        transaction_type:
+          type: string
+        amount:
+          type: integer
+          format: int32
+        timestamp:
+          type: string
+        description:
+          type: string
+        account_number:
+          type: string
+        recipient_account_number:
+          type: string
+      example:
+        transaction_id: 1
+        transaction_type: "Deposit"
+        amount: 100.00
+        timestamp: "17-04-2022 16:21:12"
+        description: "Deposit to Savings Account"
+        account_number: "NL12ABNA0123456789"
+        recipient_account_number: "NL12ABNA1234567890"
+
