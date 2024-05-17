@@ -5,12 +5,12 @@ FROM python:3.12.3
 
 LABEL maintainer="522499@student.fontys.nl"
 
-WORKDIR /bank
+WORKDIR /banking-system
 
-COPY / /bank/
+COPY / /banking-system/
 
 EXPOSE 81
 
-RUN pip install --no-cache-dir --upgrade -r /bank/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /banking-system/requirements.txt
 
-ENTRYPOINT [ "python", "./api.py", "--host", "0.0.0.0", "--port", "81"]
+ENTRYPOINT ["python", "./api.py", "--host", "0.0.0.0", "--port", "81"]
