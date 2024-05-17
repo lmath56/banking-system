@@ -13,16 +13,16 @@ class Transaction(Base):
     timestamp = Column("timestamp", String)
     description = Column("description", String)
     account_id = Column(String, ForeignKey('accounts.account_id'))
-    recipient_account_number = Column("recipient_account_number", Integer)
+    recipient_account_id = Column(String, ForeignKey('accounts.account_id'))
 
-    def __init__(self, transaction_id, transaction_type, amount, timestamp, description, account_number, recipient_account_number = None):
+    def __init__(self, transaction_id, transaction_type, amount, timestamp, description, account_id, recipient_account_id = None):
         self.transaction_id = transaction_id
         self.transaction_type = transaction_type
         self.amount = amount
         self.timestamp = timestamp
         self.description = description
-        self.account_number = account_number
-        self.recipient_account_number = recipient_account_number
+        self.account_id = account_id
+        self.recipient_account_id = recipient_account_id
 
     def __repr__(self):
-        return f"Transaction ID: {self.transaction_id}, Transaction Type: {self.transaction_type}, Amount: {self.amount}, Timestamp: {self.timestamp}, Description: {self.description} From Account Number: {self.account_number}, Recipient Account Number: {self.recipient_account_number}"
+        return f"Transaction ID: {self.transaction_id}, Transaction Type: {self.transaction_type}, Amount: {self.amount}, Timestamp: {self.timestamp}, Description: {self.description} From Account Number: {self.account_id}, Recipient Account Number: {self.recipient_account_id}"

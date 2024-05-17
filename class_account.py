@@ -18,7 +18,7 @@ class Account(Base):
     balance = Column("balance", Integer)
     enabled = Column("enabled", Boolean)
     notes = Column("notes", String)
-    transactions = relationship("Transaction", backref="account")
+    transactions = relationship("Transaction", foreign_keys='Transaction.account_id', backref="account")
                     
     def __init__(self, account_id, client_id, description, open_timestamp, account_type, balance, enabled, notes, transactions):
         self.account_id = account_id

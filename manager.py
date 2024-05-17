@@ -115,6 +115,23 @@ def get_account(account_id:int): # Returns a specific account in the database
 def add_account(client_id, description:str, account_type, **kwargs): # Adds a new account to the database
     account_id = generate_uuid_short()
     notes = kwargs.get("notes", None)
+    client_found = None
+     # Find the client
+    for client in session.query(Client).all():
+        if client.client_id == client_id:
+            client_found = client
+            break
+
+    # Check if client was found
+    if client_found is None:
+        return f"client_id: {client_id} is not found.", 422
+
+    # Add the new account
+    new_account = Account(account_id, client_id, description, timestamp(), account_type, 0, 1, notes, None)
+    session.add(new_account)
+    session.commit()
+    return f"New account has been added: description: {description}, uuid: {account_id} ", 200
+"""
     for client in session.query(Client).all():
         if client.client_id == client_id:
             new_account = Account(account_id, client_id, description, timestamp(), account_type, 0, 1, notes, None)
@@ -123,7 +140,7 @@ def add_account(client_id, description:str, account_type, **kwargs): # Adds a ne
             return f"New account has been added: description: {description}, uuid: {account_id} ", 200
         else:
             return f"client_id: {client_id} is not found.", 422
-
+"""
 def delete_account(account_id): # Deletes an account from the database
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -165,29 +182,63 @@ def get_transaction(transaction_id:int): # Returns a specific transaction in the
         return jsonify({"transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_number": transaction.account_number, "recipient_account_number": transaction.recipient_account_number}), 200
 
 def transaction_history(account_id:int): # Returns all transactions for a specific account
-    result = session.query(Transaction).filter(Transaction.account_number == account_id)
+    result = session.query(Transaction).filter(Transaction.account_id == account_id)
     return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_number": transaction.account_number, "recipient_account_number": transaction.recipient_account_number} for transaction in result]), 200
 
-def add_transaction(amount:int, account_from, account_to, **kwargs): # Adds a new transaction to the database
+def add_transaction(amount:int, account_id, recipient_account_id, **kwargs): # Adds a new transaction to the database
     transaction_id = generate_uuid()
     for account in session.query(Account).all():
-        if account.account_id == account_from:
+        if account.account_id == account_id:
+            account_from = account
+        if account.account_id == recipient_account_id:
+            account_dest = account
+
+    # Check if account has enough funds
+    if account_from.balance < amount:
+        return f"Account ID: {account_id} does not have enough funds to transfer {amount}.", 401
+
+    # Perform the transaction
+    account_from.balance -= amount
+    account_dest.balance += amount
+    transaction_type = "transfer"
+    session.commit()
+
+    # Create the transaction record
+    description = kwargs.get("description", None)
+    new_transaction = Transaction(transaction_id, transaction_type, amount, timestamp(), description, account_id, recipient_account_id)
+    session.add(new_transaction)
+    session.commit()
+
+    return f"New transaction has been added: description: {description}, uuid: {transaction_id} ", 200   
+"""
+    if account_from is None:
+        return f"Account ID: {account_id} is not found.", 404
+    if account_dest is None:
+        return f"Account ID: {account_to} is not found.", 404
+    
+    for account in session.query(Account).all():
+        if account.account_id == account_id:
             if account.balance < amount:
-                return f"Account ID: {account_from} does not have enough funds to transfer {amount}.", 401
+                return f"Account ID: {account_id} does not have enough funds to transfer {amount}.", 401
             account.balance -= amount
             transaction_type = "withdraw"
             session.commit()
+            return
+        else:
+            return f"Account ID: {account_id} is not found.", 404
+    
+    for account in session.query(Account).all():
         if account.account_id == account_to:
             account.balance += amount
             transaction_type = "transfer"
             session.commit()
     description = kwargs.get("description", None)
-    new_transaction = Transaction(transaction_id, transaction_type, amount, timestamp(), description, account_from, account_to)
+    new_transaction = Transaction(transaction_id, transaction_type, amount, timestamp(), description, account_id, account_to)
     session.add(new_transaction)
     session.commit()
     return f"New transaction has been added: description: {description}, uuid: {transaction_id} ", 200
 
-
+"""
 
 #####################
 ### Administrator ###
@@ -199,22 +250,22 @@ def get_all_clients(): # Returns all clients in the database
 
 def get_all_accounts(): # Returns all accounts in the database
     accounts = session.query(Account).all()
-    return jsonify([{"account_id": account.account_id, "description": account.description, "open_timestamp": account.open_timestamp, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes} for account in accounts])
+    return jsonify([{"account_id": account.account_id, "client_id": account.client_id, "description": account.description, "open_timestamp": account.open_timestamp, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes} for account in accounts])
 
 def get_all_transactions(): # Returns all transactions in the database
     transactions = session.query(Transaction).all()
-    return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_number": transaction.account_number, "recipient_account_number": transaction.recipient_account_number} for transaction in transactions])
+    return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id} for transaction in transactions])
         
 
 
-def update_transaction(transaction_id, transaction_type, amount, description, account_number, recipient_account_number):
+def update_transaction(transaction_id, transaction_type, amount, description, account_id, recipient_account_id):
     for transaction in session.query(Transaction).all():
         if transaction.transaction_id == transaction_id:
             transaction.transaction_type = transaction_type
             transaction.amount = amount
             transaction.description = description
-            transaction.account_number = account_number
-            transaction.recipient_account_number = recipient_account_number
+            transaction.account_id = account_id
+            transaction.recipient_account_id = recipient_account_id
             session.commit()
             return f"Transaction ID: {transaction_id} has been updated."
     return f"Transaction ID: {transaction_id} is not found."
