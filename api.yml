@@ -5,7 +5,7 @@ info:
     Lucas Mathews - Fontys Student ID: 5023572
   contact:
     email: 522499@student.fontys.nl
-  version: 2.0.0
+  version: 3.0.0
 servers:
   - url: http://127.0.0.1:81
 tags:
@@ -231,6 +231,12 @@ paths:
       description: Add a new account to the system
       operationId: manager.add_account
       parameters:
+        - name: client_id
+          in: query
+          description: ID of client to add account to
+          required: true
+          schema:
+            type: string
         - name: description
           in: query
           description: Account description
@@ -254,8 +260,8 @@ paths:
           description: Successful operation
         '400':
           description: Invalid input
-        '422':
-          description: Validation exception
+        '404':
+          description: client_id not found
     put:
       tags:
         - account
@@ -627,8 +633,6 @@ components:
           type: boolean
         administator:
           type: boolean
-        accounts:
-          type: array
       example:
         client_id: 1
         name: "Lucas Mathews"
@@ -641,13 +645,14 @@ components:
         notes: "This is a test client"
         enabled: true
         administator: false
-        accounts: []
     Account: 
       type: object
       properties:
         account_id:
           type: integer
           format: int32
+        client_id:
+          type: string
         decription:
           type: string
         opening_timestamp:
@@ -664,13 +669,13 @@ components:
           type: array
       example:
         account_id: 1
+        client_id:  1
         description: "Savings Account"
         opening_timestamp: "17-04-2022 16:21:12"
         account_type: "Rachelsmolen 1, 5612MA, Eindhoven"
         balance: 2314.23
         enabled: true
         notes: "This is a savings account"
-        transactions: []
     Transaction:
       type: object
       properties:
@@ -686,7 +691,7 @@ components:
           type: string
         description:
           type: string
-        account_number:
+        account_id:
           type: string
         recipient_account_number:
           type: string

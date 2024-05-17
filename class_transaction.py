@@ -1,7 +1,7 @@
 # Lucas Mathews - Fontys Student ID: 5023572
 # Banking System Transaction Class
 
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, ForeignKey
 
 from class_base import Base
 
@@ -12,7 +12,7 @@ class Transaction(Base):
     amount = Column("amount", Integer)
     timestamp = Column("timestamp", String)
     description = Column("description", String)
-    account_number = Column("account_number", Integer)
+    account_id = Column(String, ForeignKey('accounts.account_id'))
     recipient_account_number = Column("recipient_account_number", Integer)
 
     def __init__(self, transaction_id, transaction_type, amount, timestamp, description, account_number, recipient_account_number = None):

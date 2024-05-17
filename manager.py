@@ -110,15 +110,19 @@ def get_account(account_id:int): # Returns a specific account in the database
         return jsonify({"error": "Account not found"}), 404
     if account is not None:
         for account in account:
-            return jsonify({"description": account.description, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes}), 200
+            return jsonify({"client_id": account.client.id, "description": account.description, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes}), 200
 
-def add_account(description:str, account_type, **kwargs): # Adds a new account to the database
+def add_account(client_id, description:str, account_type, **kwargs): # Adds a new account to the database
     account_id = generate_uuid_short()
     notes = kwargs.get("notes", None)
-    new_account = Account(account_id, description, timestamp(), account_type, 0, 1, notes, None)
-    session.add(new_account)
-    session.commit()
-    return f"New account has been added: description: {description}, uuid: {account_id} ", 200
+    for client in session.query(Client).all():
+        if client.client_id == client_id:
+            new_account = Account(account_id, client_id, description, timestamp(), account_type, 0, 1, notes, None)
+            session.add(new_account)
+            session.commit()
+            return f"New account has been added: description: {description}, uuid: {account_id} ", 200
+        else:
+            return f"client_id: {client_id} is not found.", 422
 
 def delete_account(account_id): # Deletes an account from the database
     for account in session.query(Account).all():
