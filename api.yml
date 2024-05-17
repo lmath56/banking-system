@@ -157,26 +157,54 @@ paths:
       summary: Update an existing client
       description: Update an existing client Id
       operationId: manager.update_client
-      requestBody:
-        description: Update an existing client's details
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Client'
-        required: true
+      parameters:
+        - name: client_id
+          in: query
+          description: ID of client to update
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Client Name
+          required: false
+          schema:
+            type: string
+        - name: birthdate
+          in: query
+          description: Client Birthdate (dd-mm-yyyy)
+          required: false
+          schema:
+            type: string
+        - name: address
+          in: query
+          description: Client Address
+          required: false
+          schema:
+            type: string
+        - name: phone_number
+          in: query
+          description: Client Phone Number
+          required: false
+          schema:
+            type: string
+        - name: email 
+          in: query
+          description: Client Email Address
+          required: false
+          schema:
+            type: string
+        - name: notes
+          in: query
+          description: Notes about client
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Client'
         '400':
           description: Invalid Client ID supplied
-        '404':
-          description: Client not found
-        '422':
-          description: Validation exception
     get:
       tags:
         - client
@@ -273,28 +301,31 @@ paths:
           description: ID of account to update
           required: true
           schema:
-            type: integer
-            format: int32
-      requestBody:
-        description: Update an existing account
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Account'
-        required: true
+            type: string
+        - name: description
+          in: query
+          description: Account description
+          required: false
+          schema:
+            type: string
+        - name: account_type  
+          in: query
+          description: Type of account
+          required: false
+          schema:
+            type: string
+        - name: notes
+          in: query
+          description: Notes about account
+          required: false
+          schema:
+            type: string
+
       responses:
         '200':
           description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
         '400':
           description: Invalid Account ID supplied
-        '404':
-          description: Account not found
-        '422':
-          description: Validation exception
     get:
       tags:
         - account
@@ -353,8 +384,7 @@ paths:
           description: ID of transaction to return
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
       responses:
         '200':
           description: Successful operation
@@ -535,32 +565,6 @@ paths:
           description: Invalid input
         '404':
           description: No transactions found
-    put:
-      tags:
-        - manager
-      summary: Update an existing transaction
-      description: Update an existing transaction
-      operationId: manager.update_transaction
-      requestBody:
-        description: Update an existing transaction
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Transaction'
-        required: true
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Transaction'
-        '400':
-          description: Invalid Transaction ID supplied
-        '404':
-          description: Transaction not found
-        '422':
-          description: Validation exception
   /Manager/Hash:
     get:
       tags:
