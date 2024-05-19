@@ -2,8 +2,11 @@
 # Banking System CLI Utility
 
 import requests
+import argparse
+import sys
+from config import CONFIG
 
-SERVER_URL = "http://127.0.0.1:5000"
+SERVER_URL = "http://127.0.0.1:81"
 
 def main():
     username = "john"
@@ -17,3 +20,6 @@ def main():
     print(f"{response}, {response.content}")
     print(f"Closing")
 main()
+
+if __name__ == "__main__":
+    sys.exit( main() )
