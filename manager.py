@@ -96,7 +96,6 @@ def change_password(client_id:str, password:str, new_password:str): # Changes th
     return f"client_id: {client_id} is not found.", 404
 
 
-
 def login_user(email:str, password:str):
     for client in session.query(Client).all():
         if client.email == email and client.password == password:
@@ -105,11 +104,6 @@ def login_user(email:str, password:str):
 
 def logout_user():
     return "You have been logged out." 
-
-
-
-
-
 
 
 ###############
@@ -231,7 +225,7 @@ def get_all_transactions(): # Returns all transactions in the database
     return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id} for transaction in transactions])
         
 
-        
+
 def apply_interest(account_id:int, interest_rate:float):
     for account in session.query(Account).filter(Account.account_id == account_id):
         if account.account_id == account_id:
