@@ -1,0 +1,5 @@
+Old/
+.venv/
+__pycache__/
+.dockerignore
+Flask App
