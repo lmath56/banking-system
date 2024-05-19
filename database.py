@@ -22,11 +22,8 @@ print(f"Database file set to: {db_url}")
 # Creates the database engine (does not create the database file if it already exists)
 engine = create_engine(db_url, echo=True)
 
-#Import Classes
+#Import base class
 from class_base import Base # Imports the base class required by SQLAlchemy
-from class_client import Client
-from class_account import Account
-from class_transaction import Transaction
 
 # Create the tables in the database
 Base.metadata.create_all(bind=engine) # Creates the tables in the database from the classes
