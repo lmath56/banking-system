@@ -1,9 +1,8 @@
 # Lucas Mathews - Fontys Student ID: 5023572
 # Banking System Client Class
 
-from sqlalchemy import Column, String, Boolean, ForeignKey
+from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm import relationship
-
 
 from class_base import Base
 

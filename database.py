@@ -6,7 +6,7 @@ import os.path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-#Import Config
+# Import Config
 from config import CONFIG 
 
 # Check if the database exists
@@ -22,7 +22,7 @@ print(f"Database file set to: {db_url}")
 # Creates the database engine (does not create the database file if it already exists)
 engine = create_engine(db_url, echo=True)
 
-#Import base class
+# Import base class
 from class_base import Base # Imports the base class required by SQLAlchemy
 
 # Create the tables in the database

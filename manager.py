@@ -4,7 +4,7 @@
 from class_client import Client
 from class_account import Account
 from class_transaction import Transaction
-from flask import jsonify
+from flask import jsonify, session, request # Imports the Flask modules
 import hashlib # hashlib for password hashing
 import datetime # datetime for timestamps
 import uuid # uuid for unique identifiers
@@ -27,6 +27,30 @@ def generate_uuid(): # Generates a unique identifier for transactions
 
 def generate_uuid_short(): # Generates a short uuid
     return str(uuid.uuid4())[:8]
+
+##############
+### Client ###
+##############
+
+def login(client_id:str, password:str): # Logs in a user
+    password_hash = password_hash(password)
+    for client in session.query(Client).all():
+        if client.client_id == client_id and client.hash == password_hash:
+            session['client_id'] = client_id
+            return jsonify({"message": f"{session['username']} logged in succsessfully."}), 200
+    return "Invalid client_id or password.", 401
+        
+def logout():
+    if 'client_id' in session:
+        session.pop('client_id', None)
+        return jsonify({"message": "Logged out"}), 200
+    return jsonify({"message": "Not logged in"}), 404
+
+def status():
+    if 'client_id' in session:
+        return jsonify({"message": f"Logged in as {session['username']}"}), 200
+    else:
+        return jsonify({"message": "Not logged in"}), 400
 
 ##############
 ### Client ###
@@ -94,16 +118,6 @@ def change_password(client_id:str, password:str, new_password:str): # Changes th
                 return "Password changed successfully.", 200
             return "Incorrect old password.", 400
     return f"client_id: {client_id} is not found.", 404
-
-
-def login_user(email:str, password:str):
-    for client in session.query(Client).all():
-        if client.email == email and client.password == password:
-            return f"Welcome {client.name}."
-    return "Invalid email or password."
-
-def logout_user():
-    return "You have been logged out." 
 
 
 ###############

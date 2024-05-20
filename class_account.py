@@ -4,8 +4,6 @@
 from sqlalchemy import ForeignKey, Column, String, Integer, Boolean
 from sqlalchemy.orm import relationship
 
-
-
 from class_base import Base
 
 class Account(Base):
