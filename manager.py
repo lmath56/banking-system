@@ -4,13 +4,11 @@
 from class_client import Client
 from class_account import Account
 from class_transaction import Transaction
-from flask import Flask, jsonify, session as flask_session, request  # Imports the Flask modules
+from flask import jsonify, session as flask_session  # Imports the Flask modules
 import hashlib # hashlib for password hashing
 import datetime # datetime for timestamps
 import uuid # uuid for unique identifiers
 from functools import wraps # functools for decorators / user login
-
-
 from database import * # Importing the database connection
 
 ##############
@@ -70,8 +68,14 @@ def admin_required(f):
             if client.client_id == flask_session['client_id']:
                 if client.administrator == 1:
                     return f(*args, **kwargs)
-        return jsonify({"error": "Not authorized"}), 403
+        return jsonify({"error": "Not authorised"}), 403
     return decorated_function
+
+def get_current_client():
+    client = flask_session['client_id']
+    is_admin = session.query(Client).filter_by(client_id=client).one_or_none().administrator
+    return client, is_admin
+ 
 
 ##############
 ### Client ###
@@ -79,7 +83,9 @@ def admin_required(f):
 
 @login_required
 def get_client(client_id:str): # Returns a specific client in the database
-    client = session.query(Client).filter_by(client_id=client_id).one_or_none()
+    current_client_id, is_admin = get_current_client()
+    if not is_admin and client_id != current_client_id:
+        return jsonify({"error": "You can only view your own client information."}), 403
     for client in session.query(Client).all():
         if client.client_id == client_id:
             return jsonify({"name": client.name, "birthdate": client.birthdate, "opening_timestamp": client.opening_timestamp, "address": client.address, "phone_number": client.phone_number, "email": client.email}), 200 
@@ -95,19 +101,10 @@ def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str
     return f"New client has been added: name: {name}, uuid: {client_id} ", 200
 
 @login_required
-def delete_client(client_id:str): # Deletes a client from the database
-    for client in session.query(Client).all():
-        if client.client_id == client_id:
-            if client.accounts == None:
-                session.delete(client)
-                session.commit()
-                return f"client_id: {client_id} has been removed.", 200
-            else:
-                return f"client_id: {client_id} has active accounts and can not be removed.", 400
-    return f"client_id: {client_id} is not found.", 404
-
-@login_required
 def update_client(client_id:str, **kwargs): # Updates a client in the database
+    current_client_id, is_admin = get_current_client()
+    if not is_admin and client_id != current_client_id:
+        return jsonify({"error": "You can only update your own client information."}), 403
     for client in session.query(Client).all():
         if client.client_id == client_id:
             name = kwargs.get("name", None)
@@ -134,6 +131,9 @@ def update_client(client_id:str, **kwargs): # Updates a client in the database
 
 @login_required
 def change_password(client_id:str, password:str, new_password:str): # Changes the password of a client
+    current_client_id, is_admin = get_current_client()
+    if not is_admin and client_id != current_client_id:
+        return jsonify({"error": "You can only update your own password."}), 403    
     old_hash = hash_password(password)
     new_hash = hash_password(new_password)
     for client in session.query(Client).all():
@@ -151,6 +151,10 @@ def change_password(client_id:str, password:str, new_password:str): # Changes th
 
 @login_required
 def get_account(account_id:str): # Returns a specific account in the database
+    current_client_id, is_admin = get_current_client()
+    account_owner = session.query(Account).filter_by(account_id=account_id).one_or_none().client_id
+    if not is_admin and account_owner != current_client_id:
+        return jsonify({"error": "You can only view your own account information."}), 403
     account = session.query(Account).filter_by(account_id=account_id).one_or_none()
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -159,6 +163,9 @@ def get_account(account_id:str): # Returns a specific account in the database
 
 @login_required
 def add_account(client_id:str, description:str, account_type:str, **kwargs): # Adds a new account to the database
+    current_client_id, is_admin = get_current_client()
+    if not is_admin and client_id != current_client_id:
+        return jsonify({"error": "You can only add accounts your own client account."}), 403    
     account_id = generate_uuid_short()
     notes = kwargs.get("notes", None)
     client_found = None
@@ -176,20 +183,12 @@ def add_account(client_id:str, description:str, account_type:str, **kwargs): # A
     session.commit()
     return f"New account has been added: description: {description}, uuid: {account_id} ", 200
 
-@login_required
-def delete_account(account_id:str): # Deletes an account from the database
-    for account in session.query(Account).all():
-        if account.account_id == account_id:
-            if account.balance == 0:
-                session.delete(account)
-                session.commit()
-                return f"account_id: {account_id} has been removed.", 200
-            else:
-                return f"account_id: {account_id} has a balance and can not be removed.", 400
-    return f"account_id: {account_id} is not found.", 404
-
 @login_required       
 def update_account(account_id:str, **kwargs): # Updates an account in the database    
+    current_client_id, is_admin = get_current_client()
+    account_owner = session.query(Account).filter_by(account_id=account_id).one_or_none().client_id
+    if not is_admin and account_owner != current_client_id:
+        return jsonify({"error": "You can only view your own account information."}), 403    
     for account in session.query(Account).all():
         if account.account_id == account_id: 
             description = kwargs.get("description", None)
@@ -217,14 +216,21 @@ def update_account(account_id:str, **kwargs): # Updates an account in the databa
 
 @login_required
 def get_transaction(transaction_id:int): # Returns a specific transaction in the database
+    current_client_id, is_admin = get_current_client()
     transaction = session.query(Transaction).filter_by(transaction_id=transaction_id).one_or_none()
-    for transaction in session.query(Transaction).all():
-        if transaction.transaction_id == transaction_id:
-            return jsonify({"transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id}), 200
-    return jsonify({"error": "Transaction not found"}), 404
+    if not transaction:
+        return jsonify({"error": "Transaction not found"}), 404
+    account = session.query(Account).filter_by(account_id=transaction.account_id).one_or_none()
+    recipient_account = session.query(Account).filter_by(account_id=transaction.recipient_account_id).one_or_none()
+    if not is_admin and (account.client_id != current_client_id and recipient_account.client_id != current_client_id):
+        return jsonify({"error": "You can only view your own transaction information."}), 403
+    return jsonify({"transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id}), 200
 
 @login_required
 def add_transaction(amount:int, account_id, recipient_account_id, **kwargs): # Adds a new transaction to the database
+    current_client_id, is_admin = get_current_client()
+    if not is_admin and account_id != current_client_id:
+        return jsonify({"error": "You can only add transactions to your own account."}), 403
     transaction_id = generate_uuid()
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -248,12 +254,45 @@ def add_transaction(amount:int, account_id, recipient_account_id, **kwargs): # A
 
 @login_required
 def transaction_history(account_id:int): # Returns all transactions for a specific account
+    current_client_id, is_admin = get_current_client()
+    account = session.query(Account).filter_by(account_id=account_id).one_or_none()
+    if not account:
+        return jsonify({"error": "Account not found."}), 404
+    if not is_admin and account.client_id != current_client_id:
+        return jsonify({"error": "You can only view your own transaction history."}), 403
     result = session.query(Transaction).filter(Transaction.account_id == account_id)
     return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_number": transaction.account_id, "recipient_account_number": transaction.recipient_account_id} for transaction in result]), 200
 
 #####################
 ### Administrator ###
 #####################
+
+@admin_required
+def delete_client(client_id:str): # Deletes a client from the database
+    if client_id == flask_session['client_id']:
+        return "You can not delete yourself.", 400
+    
+    for client in session.query(Client).all():
+        if client.client_id == client_id:
+            if client.accounts == None:
+                session.delete(client)
+                session.commit()
+                return f"client_id: {client_id} has been removed.", 200
+            else:
+                return f"client_id: {client_id} has active accounts and can not be removed.", 400
+    return f"client_id: {client_id} is not found.", 404
+
+@admin_required
+def delete_account(account_id:str): # Deletes an account from the database
+    for account in session.query(Account).all():
+        if account.account_id == account_id:
+            if account.balance == 0:
+                session.delete(account)
+                session.commit()
+                return f"account_id: {account_id} has been removed.", 200
+            else:
+                return f"account_id: {account_id} has a balance and can not be removed.", 400
+    return f"account_id: {account_id} is not found.", 404
 
 @admin_required
 def get_all_clients(): # Returns all clients in the database
@@ -304,5 +343,21 @@ def delete_transaction(transaction_id:int):
             return
     return f"Transaction ID: {transaction_id} is not found."
 
+@admin_required
+def test_account_balances():
+    # Get all accounts
+    all_accounts = get_all_accounts()
 
+    # Go through each account
+    for account in all_accounts:
+        # Calculate the balance based on the transactions
+        calculated_balance = 0
+        for transaction in account.get_transactions():
+            if transaction.transaction_type == 'Deposit':
+                calculated_balance += transaction.amount
+            elif transaction.transaction_type == 'Withdrawal':
+                calculated_balance -= transaction.amount
 
+        # Check if the calculated balance matches the stored balance
+        if calculated_balance != account.balance:
+            print(f"Alert: Account {account.account_id} has a balance discrepancy. Stored balance is {account.balance}, but calculated balance is {calculated_balance}.")
