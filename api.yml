@@ -15,13 +15,17 @@ tags:
     description: Operations for Bank Accounts
   - name: transaction
     description: Operations for Transactions
-  - name: manager
-    description: Operations for Bank Managers
+  - name: login
+    description: Operations for Logging in 
+  - name: system
+    description: Operations for System
+  - name: admin
+    description: Operations for Admin
 paths:
   /Client/Login:
     post:
       tags:
-        - client
+        - login
       summary: Log in to the system
       description: Log in to the system
       operationId: manager.login
@@ -46,7 +50,7 @@ paths:
   /Client/Logout:
     post:
       tags:
-        - client
+        - login
       summary: Log out from the system
       description: Log out from the system
       operationId: manager.logout
@@ -58,9 +62,9 @@ paths:
   /Client/Status:
     get:
       tags:
-        - client
-      summary: Get client status
-      description: Get client status
+        - login
+      summary: Get login status
+      description: Get login status
       operationId: manager.status
       responses:
         '200':
@@ -472,7 +476,7 @@ paths:
   /Manager/Interest:
     post:
       tags:
-        - manager
+        - admin
       summary: Apply interest
       description: Apply interest to account
       operationId: manager.apply_interest
@@ -496,7 +500,7 @@ paths:
           description: Validation exception
     put:
       tags:
-        - manager
+        - admin
       summary: Apply fee
       description: Apply fee to account
       operationId: manager.apply_fee
@@ -521,7 +525,7 @@ paths:
   /Manager/Clients:  
     get:
       tags:
-        - manager
+        - admin
       summary: Get all clients
       description: Get all clients
       operationId: manager.get_all_clients
@@ -539,7 +543,7 @@ paths:
   /Manager/Accounts:
     get:
       tags:
-        - manager
+        - admin
       summary: Get all accounts
       description: Get all accounts
       operationId: manager.get_all_accounts
@@ -557,7 +561,7 @@ paths:
   /Manager/Transactions:
     get:
       tags:
-        - manager
+        - admin
       summary: Get all transactions
       description: Get all transactions
       operationId: manager.get_all_transactions
@@ -575,10 +579,10 @@ paths:
   /Manager/Hash:
     get:
       tags:
-        - manager
+        - system
       summary: Hash password
       description: Pass a string through the hashing algorithm
-      operationId: manager.password_hash
+      operationId: manager.hash_password
       parameters:
         - name: password
           in: query
@@ -600,7 +604,7 @@ paths:
   /Manager/Timestamp:
       get:
         tags:
-          - manager
+          - system
         summary: Get the timestamp
         description: Gets the date and time in the appropriate format
         operationId: manager.timestamp   

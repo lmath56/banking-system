@@ -4,10 +4,11 @@
 from class_client import Client
 from class_account import Account
 from class_transaction import Transaction
-from flask import jsonify, session, request # Imports the Flask modules
+from flask import Flask, jsonify, session as flask_session, request  # Imports the Flask modules
 import hashlib # hashlib for password hashing
 import datetime # datetime for timestamps
 import uuid # uuid for unique identifiers
+from functools import wraps # functools for decorators / user login
 
 
 from database import * # Importing the database connection
@@ -19,7 +20,7 @@ from database import * # Importing the database connection
 def timestamp(): # Returns the current timestamp
     return (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-def password_hash(password:str): # Converts a string to SHA512 hash
+def hash_password(password:str): # Converts a string to SHA512 hash
     return hashlib.sha512(password.encode()).hexdigest()
 
 def generate_uuid(): # Generates a unique identifier for transactions
@@ -28,34 +29,43 @@ def generate_uuid(): # Generates a unique identifier for transactions
 def generate_uuid_short(): # Generates a short uuid
     return str(uuid.uuid4())[:8]
 
-##############
-### Client ###
-##############
+#############
+### Login ###
+#############
 
 def login(client_id:str, password:str): # Logs in a user
-    password_hash = password_hash(password)
+    password_hash = hash_password(password)
     for client in session.query(Client).all():
         if client.client_id == client_id and client.hash == password_hash:
-            session['client_id'] = client_id
-            return jsonify({"message": f"{session['username']} logged in succsessfully."}), 200
+            flask_session['client_id'] = client_id
+            return jsonify({"message": f"{flask_session['client_id']} logged in succsessfully."}), 200
     return "Invalid client_id or password.", 401
         
 def logout():
-    if 'client_id' in session:
-        session.pop('client_id', None)
+    if 'client_id' in flask_session:
+        flask_session.pop('client_id', None)
         return jsonify({"message": "Logged out"}), 200
     return jsonify({"message": "Not logged in"}), 404
 
 def status():
-    if 'client_id' in session:
+    if 'client_id' in flask_session:
         return jsonify({"message": f"Logged in as {session['username']}"}), 200
     else:
         return jsonify({"message": "Not logged in"}), 400
+    
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'client_id' not in flask_session:
+            return jsonify({"error": "Not logged in"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 ##############
 ### Client ###
 ##############
 
+@login_required
 def get_client(client_id:str): # Returns a specific client in the database
     client = session.query(Client).filter_by(client_id=client_id).one_or_none()
     for client in session.query(Client).all():
@@ -63,14 +73,16 @@ def get_client(client_id:str): # Returns a specific client in the database
             return jsonify({"name": client.name, "birthdate": client.birthdate, "opening_timestamp": client.opening_timestamp, "address": client.address, "phone_number": client.phone_number, "email": client.email}), 200 
     return jsonify({"error": "Client not found"}), 404
 
+@login_required
 def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str, password:str, **kwargs): # Adds a new client to the database
     client_id = generate_uuid_short()
     notes = kwargs.get("notes", None)
-    new_client = Client(client_id, name, birthdate, timestamp(), address, phone_number, email, password_hash(password), notes, 1, 0, None)
+    new_client = Client(client_id, name, birthdate, timestamp(), address, phone_number, email, hash_password(password), notes, 1, 0, None)
     session.add(new_client)
     session.commit()
     return f"New client has been added: name: {name}, uuid: {client_id} ", 200
 
+@login_required
 def delete_client(client_id:str): # Deletes a client from the database
     for client in session.query(Client).all():
         if client.client_id == client_id:
@@ -82,6 +94,7 @@ def delete_client(client_id:str): # Deletes a client from the database
                 return f"client_id: {client_id} has active accounts and can not be removed.", 400
     return f"client_id: {client_id} is not found.", 404
 
+@login_required
 def update_client(client_id:str, **kwargs): # Updates a client in the database
     for client in session.query(Client).all():
         if client.client_id == client_id:
@@ -107,9 +120,10 @@ def update_client(client_id:str, **kwargs): # Updates a client in the database
             return f"client_id: {client_id} has been updated.", 299
     return f"Client ID: {client_id} is not found." , 400
 
+@login_required
 def change_password(client_id:str, password:str, new_password:str): # Changes the password of a client
-    old_hash = password_hash(password)
-    new_hash = password_hash(new_password)
+    old_hash = hash_password(password)
+    new_hash = hash_password(new_password)
     for client in session.query(Client).all():
         if client.client_id == client_id:
             if client.hash == old_hash:
@@ -124,6 +138,7 @@ def change_password(client_id:str, password:str, new_password:str): # Changes th
 ### Account ###
 ###############
 
+@login_required
 def get_account(account_id:str): # Returns a specific account in the database
     account = session.query(Account).filter_by(account_id=account_id).one_or_none()
     for account in session.query(Account).all():
@@ -131,6 +146,7 @@ def get_account(account_id:str): # Returns a specific account in the database
             return jsonify({"client_id": account.client_id, "description": account.description, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes}), 200
     return jsonify({"error": "Account not found"}), 404
 
+@login_required
 def add_account(client_id:str, description:str, account_type:str, **kwargs): # Adds a new account to the database
     account_id = generate_uuid_short()
     notes = kwargs.get("notes", None)
@@ -149,6 +165,7 @@ def add_account(client_id:str, description:str, account_type:str, **kwargs): # A
     session.commit()
     return f"New account has been added: description: {description}, uuid: {account_id} ", 200
 
+@login_required
 def delete_account(account_id:str): # Deletes an account from the database
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -159,7 +176,8 @@ def delete_account(account_id:str): # Deletes an account from the database
             else:
                 return f"account_id: {account_id} has a balance and can not be removed.", 400
     return f"account_id: {account_id} is not found.", 404
-        
+
+@login_required       
 def update_account(account_id:str, **kwargs): # Updates an account in the database    
     for account in session.query(Account).all():
         if account.account_id == account_id: 
@@ -189,6 +207,7 @@ def update_account(account_id:str, **kwargs): # Updates an account in the databa
 ### Transaction ###
 ###################
 
+@login_required
 def get_transaction(transaction_id:int): # Returns a specific transaction in the database
     transaction = session.query(Transaction).filter_by(transaction_id=transaction_id).one_or_none()
     for transaction in session.query(Transaction).all():
@@ -196,6 +215,7 @@ def get_transaction(transaction_id:int): # Returns a specific transaction in the
             return jsonify({"transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id}), 200
     return jsonify({"error": "Transaction not found"}), 404
 
+@login_required
 def add_transaction(amount:int, account_id, recipient_account_id, **kwargs): # Adds a new transaction to the database
     transaction_id = generate_uuid()
     for account in session.query(Account).all():
@@ -218,6 +238,7 @@ def add_transaction(amount:int, account_id, recipient_account_id, **kwargs): # A
     session.commit()
     return f"New transaction has been added: description: {description}, uuid: {transaction_id} ", 200   
 
+@login_required
 def transaction_history(account_id:int): # Returns all transactions for a specific account
     result = session.query(Transaction).filter(Transaction.account_id == account_id)
     return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_number": transaction.account_id, "recipient_account_number": transaction.recipient_account_id} for transaction in result]), 200
@@ -226,20 +247,23 @@ def transaction_history(account_id:int): # Returns all transactions for a specif
 ### Administrator ###
 #####################
 
+@login_required
 def get_all_clients(): # Returns all clients in the database
     clients = session.query(Client).all()
     return jsonify([{"client_id": client.client_id, "name": client.name, "birthdate": client.birthdate, "opening_timestamp": client.opening_timestamp, "address": client.address, "phone_number": client.phone_number, "email": client.email} for client in clients])
 
+@login_required
 def get_all_accounts(): # Returns all accounts in the database
     accounts = session.query(Account).all()
     return jsonify([{"account_id": account.account_id, "client_id": account.client_id, "description": account.description, "open_timestamp": account.open_timestamp, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes} for account in accounts])
 
+@login_required
 def get_all_transactions(): # Returns all transactions in the database
     transactions = session.query(Transaction).all()
     return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id} for transaction in transactions])
         
 
-
+@login_required
 def apply_interest(account_id:int, interest_rate:float):
     for account in session.query(Account).filter(Account.account_id == account_id):
         if account.account_id == account_id:
@@ -248,6 +272,7 @@ def apply_interest(account_id:int, interest_rate:float):
             return f"Interest has been applied to Account ID: {account_id}."
     return f"Account ID: {account_id} is not found."
 
+@login_required
 def apply_fee(account_id:int, fee:float):
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -256,6 +281,7 @@ def apply_fee(account_id:int, fee:float):
             return f"Fee has been applied to Account ID: {account_id}."
     return f"Account ID: {account_id} is not found."
 
+@login_required
 def delete_transaction(transaction_id:int):
     DELETE_TRANSACTION = "DELETE FROM transaction WHERE transaction_id=?"
     from api import session, Transaction
