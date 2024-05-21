@@ -49,7 +49,7 @@ def logout():
 
 def status():
     if 'client_id' in flask_session:
-        return jsonify({"message": f"Logged in as {session['username']}"}), 200
+        return jsonify({"message": f"Logged in as {flask_session['client_id']}"}), 200
     else:
         return jsonify({"message": "Not logged in"}), 400
     
@@ -59,6 +59,18 @@ def login_required(f):
         if 'client_id' not in flask_session:
             return jsonify({"error": "Not logged in"}), 401
         return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'client_id' not in flask_session:
+            return jsonify({"error": "Not logged in"}), 401
+        for client in session.query(Client).all():
+            if client.client_id == flask_session['client_id']:
+                if client.administrator == 1:
+                    return f(*args, **kwargs)
+        return jsonify({"error": "Not authorized"}), 403
     return decorated_function
 
 ##############
@@ -133,7 +145,6 @@ def change_password(client_id:str, password:str, new_password:str): # Changes th
             return "Incorrect old password.", 400
     return f"client_id: {client_id} is not found.", 404
 
-
 ###############
 ### Account ###
 ###############
@@ -200,9 +211,6 @@ def update_account(account_id:str, **kwargs): # Updates an account in the databa
             return f"account_id: {account_id} has been updated.", 200
     return f"account_id: {account_id} is not found.", 400
 
-
-
-
 ###################
 ### Transaction ###
 ###################
@@ -247,23 +255,23 @@ def transaction_history(account_id:int): # Returns all transactions for a specif
 ### Administrator ###
 #####################
 
-@login_required
+@admin_required
 def get_all_clients(): # Returns all clients in the database
     clients = session.query(Client).all()
     return jsonify([{"client_id": client.client_id, "name": client.name, "birthdate": client.birthdate, "opening_timestamp": client.opening_timestamp, "address": client.address, "phone_number": client.phone_number, "email": client.email} for client in clients])
 
-@login_required
+@admin_required
 def get_all_accounts(): # Returns all accounts in the database
     accounts = session.query(Account).all()
     return jsonify([{"account_id": account.account_id, "client_id": account.client_id, "description": account.description, "open_timestamp": account.open_timestamp, "account_type": account.account_type, "balance": account.balance, "enabled": account.enabled, "notes": account.notes} for account in accounts])
 
-@login_required
+@admin_required
 def get_all_transactions(): # Returns all transactions in the database
     transactions = session.query(Transaction).all()
     return jsonify([{"transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, "amount": transaction.amount, "timestamp": transaction.timestamp, "description": transaction.description, "account_id": transaction.account_id, "recipient_account_id": transaction.recipient_account_id} for transaction in transactions])
         
 
-@login_required
+@admin_required
 def apply_interest(account_id:int, interest_rate:float):
     for account in session.query(Account).filter(Account.account_id == account_id):
         if account.account_id == account_id:
@@ -272,7 +280,7 @@ def apply_interest(account_id:int, interest_rate:float):
             return f"Interest has been applied to Account ID: {account_id}."
     return f"Account ID: {account_id} is not found."
 
-@login_required
+@admin_required
 def apply_fee(account_id:int, fee:float):
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -281,7 +289,7 @@ def apply_fee(account_id:int, fee:float):
             return f"Fee has been applied to Account ID: {account_id}."
     return f"Account ID: {account_id} is not found."
 
-@login_required
+@admin_required
 def delete_transaction(transaction_id:int):
     DELETE_TRANSACTION = "DELETE FROM transaction WHERE transaction_id=?"
     from api import session, Transaction
