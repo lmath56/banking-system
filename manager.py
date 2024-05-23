@@ -92,15 +92,6 @@ def get_client(client_id:str): # Returns a specific client in the database
     return jsonify({"error": "Client not found"}), 404
 
 @login_required
-def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str, password:str, **kwargs): # Adds a new client to the database
-    client_id = generate_uuid_short()
-    notes = kwargs.get("notes", None)
-    new_client = Client(client_id, name, birthdate, timestamp(), address, phone_number, email, hash_password(password), notes, 1, 0, None)
-    session.add(new_client)
-    session.commit()
-    return f"New client has been added: name: {name}, uuid: {client_id} ", 200
-
-@login_required
 def update_client(client_id:str, **kwargs): # Updates a client in the database
     current_client_id, is_admin = get_current_client()
     if not is_admin and client_id != current_client_id:
@@ -331,33 +322,78 @@ def apply_fee(account_id:int, fee:float):
 @admin_required
 def delete_transaction(transaction_id:int):
     DELETE_TRANSACTION = "DELETE FROM transaction WHERE transaction_id=?"
-    from api import session, Transaction
-    for transaction in session.query(Transaction).all():
-        if transaction.transaction_id == transaction_id:
-            input(f"Are you sure you would like permanenty delete transaction ID: {transaction_id}? WARNING: This action can not be reversed. (Y/N) ") 
-            if input == "Y"or input == "y":
-                session.execute(DELETE_TRANSACTION, (transaction_id))
-                print(f"Transaction ID: {transaction_id} has been removed.")
-            else:
-                return f"Transaction ID: {transaction_id} has NOT been removed."
-            return
-    return f"Transaction ID: {transaction_id} is not found."
+    return
 
 @admin_required
 def test_account_balances():
-    # Get all accounts
-    all_accounts = get_all_accounts()
+    # Get all transactions from the database
+    all_transactions = session.query(Transaction).all()
+
+    # Initialize a dictionary to store the calculated balance for each account
+    calculated_balances = {}
+
+    # Go through each transaction
+    for transaction in all_transactions:
+        # If the account ID of the transaction is not in the dictionary, add it with a balance of 0
+        if transaction.account_id not in calculated_balances:
+            calculated_balances[transaction.account_id] = 0
+
+        # Update the calculated balance for the account
+        if transaction.transaction_type == 'Deposit':
+            calculated_balances[transaction.account_id] += transaction.amount
+        elif transaction.transaction_type == 'Withdrawal':
+            calculated_balances[transaction.account_id] -= transaction.amount
+
+    # Get all accounts from the database
+    all_accounts = session.query(Account).all()
+
+    # Initialize a list to store the discrepancies
+    discrepancies = []
 
     # Go through each account
     for account in all_accounts:
-        # Calculate the balance based on the transactions
-        calculated_balance = 0
-        for transaction in account.get_transactions():
-            if transaction.transaction_type == 'Deposit':
-                calculated_balance += transaction.amount
-            elif transaction.transaction_type == 'Withdrawal':
-                calculated_balance -= transaction.amount
+        # If the calculated balance doesn't match the stored balance, add the discrepancy to the list
+        if calculated_balances.get(account.account_id, 0) != account.balance:
+            discrepancies.append({"error": f"Alert: Account {account.account_id} has a balance discrepancy. Stored balance is {account.balance}, but calculated balance is {calculated_balances.get(account.account_id, 0)}."})
 
-        # Check if the calculated balance matches the stored balance
-        if calculated_balance != account.balance:
-            print(f"Alert: Account {account.account_id} has a balance discrepancy. Stored balance is {account.balance}, but calculated balance is {calculated_balance}.")
+    # Return the list of discrepancies
+    return jsonify(discrepancies), 200
+
+
+@admin_required
+def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str, password:str, **kwargs): # Adds a new client to the database
+    client_id = generate_uuid_short()
+    notes = kwargs.get("notes", None)
+    new_client = Client(client_id, name, birthdate, timestamp(), address, phone_number, email, hash_password(password), notes, 1, 0, None)
+    session.add(new_client)
+    session.commit()
+    return client_id, 200
+
+def initialise_database(password:str):
+    existing_clients = session.query(Client).all() # Check if any clients exist in the database
+    if not existing_clients: # If no clients exist, create an administrator client
+        add_client('ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', password)  # Add the administrator client
+        session.commit()
+        admin_client = session.query(Client).filter_by(name='ADMINISTRATOR').one() # Retrieve the administrator client
+        admin_client.administrator = 1 # Set the new client as an administrator
+        session.commit()
+        return jsonify(f"Database initialised with administrator account with client_id {admin_client.client_id}"), 200
+    return jsonify("Database not empty, this function cannot be used."), 400
+
+@admin_required
+def promote_to_admin(client_id:str):
+    for client in session.query(Client).all():
+        if client.client_id == client_id:
+            client.administrator = 1
+            session.commit()
+            return f"client_id: {client_id} has been promoted to administrator.", 200
+    return f"client_id: {client_id} is not found.", 404
+
+@admin_required
+def demote_from_admin(client_id:str):
+    for client in session.query(Client).all():
+        if client.client_id == client_id:
+            client.administrator = 0
+            session.commit()
+            return f"client_id: {client_id} has been demoted from administrator.", 200
+    return f"client_id: {client_id} is not found.", 404
