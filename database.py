@@ -6,28 +6,21 @@ import os.path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Import Config
-from config import CONFIG 
+from config import CONFIG # Import Config
 
-# Check if the database exists
-if os.path.exists(CONFIG["database"]["name"]):
+if os.path.exists(CONFIG["database"]["name"]): # Check if the database exists
     print(f"Database {CONFIG["database"]["name"]} already exists.")
 else:
     print(f"Database {CONFIG["database"]["name"]} does not exist. Creating it now.")   
 
-# Sets the database file to be used from the configuration file
-db_url : str = "sqlite:///" + CONFIG["database"]["name"] 
+db_url : str = "sqlite:///" + CONFIG["database"]["name"] # Sets the database file to be used from the configuration file
 print(f"Database file set to: {db_url}")    
 
-# Creates the database engine (does not create the database file if it already exists)
-engine = create_engine(db_url, echo=True)
+engine = create_engine(db_url, echo=True) # Creates the database engine (does not create the database file if it already exists)
 
-# Import base class
 from class_base import Base # Imports the base class required by SQLAlchemy
 
-# Create the tables in the database
 Base.metadata.create_all(bind=engine) # Creates the tables in the database from the classes
 
-# Creates a session to interact with the database
 Session = sessionmaker(bind=engine) # Creates a session to interact with the database
 session = Session() # Creates a session object
