@@ -25,4 +25,15 @@ class Transaction(Base):
         self.recipient_account_id = recipient_account_id
 
     def __repr__(self):
-        return f"Transaction ID: {self.transaction_id}, Transaction Type: {self.transaction_type}, Amount: {self.amount}, Timestamp: {self.timestamp}, Description: {self.description} From Account Number: {self.account_id}, Recipient Account Number: {self.recipient_account_id}"
+        return f"Transaction: {self.transaction_id}, {self.transaction_type}, {self.amount}, {self.timestamp}, {self.description}, {self.account_id}, {self.recipient_account_id}"
+    
+    def to_dict(self):
+        return {
+            "transaction_id": self.transaction_id,
+            "transaction_type": self.transaction_type,
+            "amount": self.amount,
+            "timestamp": self.timestamp,
+            "description": self.description,
+            "account_id": self.account_id,
+            "recipient_account_id": self.recipient_account_id
+        }
