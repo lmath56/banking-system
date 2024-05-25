@@ -351,7 +351,7 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: float
         - name: account_id
           in: query
           description: Account number the money paid from
@@ -466,7 +466,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Client'
+                $ref: '#/components/schemas/ApiResponse'
         '400':
           description: Invalid input
         '404':
@@ -484,7 +484,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Account'
+                $ref: '#/components/schemas/ApiResponse'
         '400':
           description: Invalid input
         '404':
@@ -704,7 +704,6 @@ paths:
           required: true
           schema:
             type: string
-            format: int32
       responses:
         '200':
           description: Successful operation
@@ -726,7 +725,6 @@ paths:
           required: true
           schema:
             type: string
-            format: int32
       responses:
         '200':
           description: Successful operation
@@ -736,12 +734,24 @@ paths:
           description: Account not found
 components:
   schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+      example:
+        success: true
+        message: "Success"
+        data: {}
     Client:
       type: object
       properties:
         client_id:
-          type: integer
-          format: int32
+          type: string
         name:
           type: string
         birthdate:
@@ -754,32 +764,19 @@ components:
           type: string
         email:
           type: string
-        password:
-          type: string
-        notes:
-          type: string
-        enabled:
-          type: boolean
-        administator:
-          type: boolean
       example:
-        client_id: 1
+        client_id: "896d4ed8"
         name: "Lucas Mathews"
         birthdate: "21-05-1980"
         opening_timestamp: "17-04-2022 16:21:12"
         address: "Rachelsmolen 1, 5612MA, Eindhoven"
         phone_number: "0612345678"
         email: "john.d@fontys.nl"
-        password: "password"
-        notes: "This is a test client"
-        enabled: true
-        administator: false
     Account: 
       type: object
       properties:
         account_id:
-          type: integer
-          format: int32
+          type: string
         client_id:
           type: string
         decription:
@@ -789,33 +786,25 @@ components:
         account_type:
           type: string
         balance:
-          type: number
-        enabled:
-          type: boolean
-        notes:
-          type: string
-        transactons:
-          type: array
+          type: integer
+          format: float
       example:
-        account_id: 1
-        client_id:  1
+        account_id: "63b6e8e8"
+        client_id:  "896d4ed8"
         description: "Savings Account"
         opening_timestamp: "17-04-2022 16:21:12"
-        account_type: "Rachelsmolen 1, 5612MA, Eindhoven"
+        account_type: Savings Account"
         balance: 2314.23
-        enabled: true
-        notes: "This is a savings account"
     Transaction:
       type: object
       properties:
         transaction_id:
-          type: integer
-          format: int32
+          type: string
         transaction_type:
           type: string
         amount:
           type: integer
-          format: int32
+          format: float
         timestamp:
           type: string
         description:
@@ -825,11 +814,11 @@ components:
         recipient_account_number:
           type: string
       example:
-        transaction_id: 1
+        transaction_id: "d1c4d836-9418-437f-b21c-5cc03d3fdc33"
         transaction_type: "Deposit"
         amount: 100.00
         timestamp: "17-04-2022 16:21:12"
         description: "Deposit to Savings Account"
-        account_id: "NL12ABNA0123456789"
-        recipient_account_id: "NL12ABNA1234567890"
+        account_id: "896d4ed8"
+        recipient_account_id: "05225f17"
 
