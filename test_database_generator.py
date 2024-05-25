@@ -7,16 +7,20 @@
 # creates a new SQLite database called test_database.db and writes the test data to the database. The client ID of the  administrator account and the 
 # password for the administrator account.
 
+ADMIN_EMAIL = "lmath56@hotmail.com" # Email address of the administrator account
+
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from class_base import Base
-import hashlib 
-import uuid
 from class_account import Account
 from class_client import Client
 from class_transaction import Transaction
 from faker import Faker
 import random
+import datetime
+import hashlib 
+import uuid
 
 def generate_hash():  # Creates a hash for a password
     seed = str(random.random()).encode('utf-8')
@@ -27,6 +31,9 @@ def generate_uuid(): # Generates a unique identifier for transactions
 
 def generate_uuid_short(): # Generates a short uuid for accounts and clients
     return str(uuid.uuid4())[:8]
+
+def timestamp(): # Returns the current timestamp
+    return (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 engine = create_engine('sqlite:///test_database.db')# Create a new engine for the test database
 Base.metadata.create_all(engine) # Create all tables in the test database
@@ -45,12 +52,12 @@ for i in range(50): # Generate 50 clients
     all_account_ids.append(client_id)  # Add the client ID to the list of account IDs
     client = Client(
         client_id=client_id,
-        name=fake.name(), 
-        birthdate=fake.date_of_birth(minimum_age=18, maximum_age=90), 
-        opening_timestamp=fake.date_this_century(), 
-        address=fake.address(), 
-        phone_number=fake.phone_number(), 
-        email=fake.email(), 
+        name="ADMIN" if i == 0 else fake.name(), 
+        birthdate="ADMIN" if i == 0 else fake.date_of_birth(minimum_age=18, maximum_age=90), 
+        opening_timestamp=timestamp() if i == 0 else fake.date_this_century(), 
+        address="ADMIN" if i == 0 else fake.address(), 
+        phone_number="ADMIN" if i == 0 else fake.phone_number(), 
+        email=ADMIN_EMAIL if i == 0 else fake.email(), 
         administrator=is_administrator, 
         hash=password_hash,
         notes=fake.text(max_nb_chars=50),  # Generate fake notes
