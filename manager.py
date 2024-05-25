@@ -5,11 +5,14 @@ from class_client import Client
 from class_account import Account
 from class_transaction import Transaction
 from flask import jsonify, session as flask_session  # Imports the Flask modules
-import hashlib # hashlib for password hashing
-import datetime # datetime for timestamps
-import uuid # uuid for unique identifiers
-from functools import wraps # functools for decorators / user login
+import hashlib # For password hashing
+import datetime # For timestamps
+import uuid # For unique identifiers
+import random # For OTP generation
+import time # For OTP generation
+from functools import wraps # For decorators / user login
 from database import * # Importing the database connection
+from emailer import send_email # Importing the emailer function
 
 ##############
 ### System ###
@@ -27,9 +30,15 @@ def generate_uuid(): # Generates a unique identifier for transactions
 def generate_uuid_short(): # Generates a short uuid
     return str(uuid.uuid4())[:8]
 
-#############
-### Login ###
-#############
+def get_email(client_id:str):
+    for client in session.query(Client).all():
+        if client.client_id == client_id:
+            return client.email
+    return None
+
+######################
+### Authentication ###
+######################
 
 def login(client_id:str, password:str): # Logs in a user
     password_hash = hash_password(password)
@@ -76,6 +85,35 @@ def get_current_client():
     is_admin = session.query(Client).filter_by(client_id=client).one_or_none().administrator
     return client, is_admin
  
+otps = {} # Dictionary to store OTPs and their creation time
+
+@login_required
+def generate_otp(client_id:str): # Generates a one time password for a client
+    current_client_id, is_admin = get_current_client()
+    if not is_admin and client_id != current_client_id:
+        return jsonify({"error": "You can only view your own client information."}), 403    
+    email = get_email(client_id)
+    if email:
+        password = int(random.randint(100000, 999999))  # Generate a 6-digit OTP
+        send_email(email, "Luxbank One Time Password", f"Your one time password is: {password}"), 200 
+        otps[client_id] = (password, time.time())  # Store the OTP and the current time
+    return jsonify({"error": "Client not found"}), 404
+
+def verify_otp(client_id:str, otp:int): # Verifies a one time password for a client
+    if client_id in otps and otps[client_id][0] == otp:
+        return True
+    return False
+
+def delete_otp(client_id:str): # Deletes a one time password for a client
+    if client_id in otps:
+        del otps[client_id]
+
+def check_expired_otps(): # Checks and deletes expired OTPs
+    current_time = time.time()
+    expired_otps = [client_id for client_id, (otp, creation_time) in otps.items() if current_time - creation_time > 300]  # Find OTPs older than 5 minutes
+    for client_id in expired_otps:
+        delete_otp(client_id)
+
 
 ##############
 ### Client ###
@@ -121,10 +159,12 @@ def update_client(client_id:str, **kwargs): # Updates a client in the database
     return f"Client ID: {client_id} is not found." , 400
 
 @login_required
-def change_password(client_id:str, password:str, new_password:str): # Changes the password of a client
+def change_password(client_id:str, password:str, new_password:str, otp:int): # Changes the password of a client
     current_client_id, is_admin = get_current_client()
     if not is_admin and client_id != current_client_id:
-        return jsonify({"error": "You can only update your own password."}), 403    
+        return jsonify({"error": "You can only update your own password."}), 403
+    if not verify_otp(client_id, otp):
+        return jsonify({"error": "Invalid OTP"}), 400    
     old_hash = hash_password(password)
     new_hash = hash_password(new_password)
     for client in session.query(Client).all():
@@ -132,6 +172,7 @@ def change_password(client_id:str, password:str, new_password:str): # Changes th
             if client.hash == old_hash:
                 client.hash = new_hash
                 session.commit()
+                delete_otp(client_id)
                 return "Password changed successfully.", 200
             return "Incorrect old password.", 400
     return f"client_id: {client_id} is not found.", 404
@@ -321,8 +362,21 @@ def apply_fee(account_id:int, fee:float):
 
 @admin_required
 def delete_transaction(transaction_id:int):
-    DELETE_TRANSACTION = "DELETE FROM transaction WHERE transaction_id=?"
-    return
+    for transaction in session.query(Transaction).all():
+        if transaction.transaction_id == transaction_id:
+            session.delete(transaction)
+            session.commit()
+            return f"Transaction ID: {transaction_id} has been removed.", 400
+    return f"Transaction ID: {transaction_id} is not found.", 404
+
+@admin_required
+def modify_balance(transaction_id:int, amount:int):
+    for transaction in session.query(Transaction).all():
+        if transaction.transaction_id == transaction_id:
+            transaction.amount = amount
+            session.commit()
+            return f"Transaction ID: {transaction_id} has been modified.", 200
+    return f"Transaction ID: {transaction_id} is not found.", 404
 
 @admin_required
 def test_account_balances():
@@ -369,10 +423,10 @@ def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str
     session.commit()
     return client_id, 200
 
-def initialise_database(password:str):
+def initialise_database(password:str, email:str):
     existing_clients = session.query(Client).all() # Check if any clients exist in the database
     if not existing_clients: # If no clients exist, create an administrator client
-        add_client('ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', password)  # Add the administrator client
+        add_client('ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', email, password)  # Add the administrator client
         session.commit()
         admin_client = session.query(Client).filter_by(name='ADMINISTRATOR').one() # Retrieve the administrator client
         admin_client.administrator = 1 # Set the new client as an administrator

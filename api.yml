@@ -15,8 +15,8 @@ tags:
     description: Operations for Bank Accounts
   - name: transaction
     description: Operations for Transactions
-  - name: login
-    description: Operations for Logging in 
+  - name: auth
+    description: Operations for Authentication
   - name: system
     description: Operations for System
   - name: admin
@@ -25,7 +25,7 @@ paths:
   /Client/Login:
     post:
       tags:
-        - login
+        - auth
       summary: Log in to the system
       description: Log in to the system
       operationId: manager.login
@@ -50,7 +50,7 @@ paths:
   /Client/Logout:
     post:
       tags:
-        - login
+        - auth
       summary: Log out from the system
       description: Log out from the system
       operationId: manager.logout
@@ -62,7 +62,7 @@ paths:
   /Client/Status:
     get:
       tags:
-        - login
+        - auth
       summary: Get login status
       description: Get login status
       operationId: manager.status
@@ -74,7 +74,7 @@ paths:
   /Client/Password:
     put:
       tags:
-        - client
+        - auth
       summary: Change password
       description: Change password
       operationId: manager.change_password
@@ -84,8 +84,7 @@ paths:
           description: ID of client to change password
           required: true
           schema:
-            type: integer
-            format: int32
+            type: string
         - name: password
           in: query
           description: New password
@@ -98,11 +97,41 @@ paths:
           required: true
           schema:
             type: string
+        - name: otp
+          in: query
+          description: OTP to verify
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         '200':
           description: Password changed successfully
         '400':
           description: Old password incorrect
+        '404':
+          description: client_id not found
+  /OTP/Generate:
+    get:
+      tags:
+        - auth
+      summary: Generate OTP
+      description: Generate OTP
+      operationId: manager.generate_otp
+      parameters:
+        - name: client_id
+          in: query
+          description: ID of client to generate OTP
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OTP generated
+        '401':
+          description: Unauthorised
+        '400':
+          description: OTP not valid
         '404':
           description: client_id not found
   /Client/Client:
@@ -548,6 +577,12 @@ paths:
         - name: password
           in: query
           description: Password to initialise the system
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Email to initialise the system
           required: true
           schema:
             type: string
