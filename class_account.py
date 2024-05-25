@@ -28,9 +28,6 @@ class Account(Base):
         self.enabled = enabled
         self.notes = notes
         self.transactions = transactions if transactions is not None else []
-
-    def __repr__(self):
-        return f"Account: {self.account_id}, {self.client_id}, {self.description}, {self.open_timestamp}, {self.account_type}, {self.balance}, {self.enabled}, {self.notes}, {self.transactions}"
     
     def to_dict(self):
         return {
@@ -40,7 +37,4 @@ class Account(Base):
             "open_timestamp": self.open_timestamp,
             "account_type": self.account_type,
             "balance": self.balance,
-            "enabled": self.enabled,
-            "notes": self.notes,
-            "transactions": [transaction.to_dict() for transaction in self.transactions]
         }

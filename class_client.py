@@ -35,9 +35,6 @@ class Client(Base):
         self.administrator = administrator
         self.accounts = accounts if accounts is not None else []
     
-    def __repr__(self):
-        return f"Client: {self.client_id}, {self.name}, {self.birthdate}, {self.opening_timestamp}, {self.address}, {self.phone_number}, {self.email}, {self.hash}, {self.notes}, {self.enabled}, {self.administrator}, {self.accounts}"
-    
     def to_dict(self):
         return {
             "client_id": self.client_id,
@@ -47,10 +44,5 @@ class Client(Base):
             "address": self.address,
             "phone_number": self.phone_number,
             "email": self.email,
-            "hash": self.hash,
-            "notes": self.notes,
-            "enabled": self.enabled,
-            "administrator": self.administrator,
-            "accounts": [account.to_dict() for account in self.accounts]
         }
     
