@@ -8,7 +8,6 @@
 import connexion # Imports connexion module
 from config import CONFIG # Imports the configuration file
 from manager import * # Imports the Manager file that contains the functions for the API
-from flask import Flask, session, jsonify, request # Imports the Flask module
 from flask_session import Session # Imports the session module 
 
 #################
