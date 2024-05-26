@@ -1,6 +1,4 @@
-# Lucas Mathews - Fontys Student ID: 5023572
-# Banking System App Login Page
-
+import tkinter as tk
 from tkinter import messagebox
 import customtkinter
 import os
@@ -14,55 +12,64 @@ from config import CONFIG
 #################
 
 def login():
+    """Function to handle the login process."""
     client_id = entry_username.get() if entry_username.get() else CONFIG["client"]["default_id"]
     client_password = entry_password.get() if entry_password.get() else CONFIG["client"]["default_password"]
     try:
-        response = authenticate_client(client_id, client_password) # Authenticate the client
-        json_response = response.json() # Convert the response content to JSON
-        if json_response["success"] == True: # If the authentication is successful, open the dashboard
+        response = authenticate_client(client_id, client_password)  # Authenticate the client
+        json_response = response.json()  # Convert the response content to JSON
+        if json_response["success"]:  # If the authentication is successful, open the dashboard
             session_data = {
                 'session_cookie': response.cookies.get_dict(),
                 'client_id': client_id
             }
-            with open('application\\session_data.json', 'w') as f: # Save the session data to a file
+            with open('application/session_data.json', 'w') as f:  # Save the session data to a file
                 json.dump(session_data, f)
             root.destroy()
-            os.system("python application\\dashboard.py")
+            os.system("python application/dashboard.py")
         else:
             messagebox.showerror("Login failed", json_response["message"]) 
     except requests.exceptions.RequestException as e:
-        messagebox.showerror("Login failed", "Could not connect to the server. Please try again later. Error: " + str(e))
+        messagebox.showerror("Login failed", f"Could not connect to the server. Please try again later. Error: {str(e)}")
 
 ##############
 ### Layout ###
 ##############
 
-if CONFIG["preferences"]["dark_theme"] == "dark": # Check if dark mode is enabled
-    customtkinter.set_appearance_mode("dark") # Set the style for dark mode
+# Set appearance mode based on configuration
+if CONFIG["preferences"]["dark_theme"] == "dark":
+    customtkinter.set_appearance_mode("dark")
 else:
-    customtkinter.set_appearance_mode("light") # Set the style for light mode
+    customtkinter.set_appearance_mode("light")
 
+# Initialize the main window
 root = customtkinter.CTk()
-
 root.title("Luxbank Login")
 root.iconbitmap("application/luxbank.ico")
 root.geometry("400x300")
 
+# Create and pack the label for the title
 label = customtkinter.CTkLabel(root, text="Luxbank", font=("Helvetica", 24))
 label.pack(pady=20)
 
+# Create and pack the username entry
 entry_username = customtkinter.CTkEntry(root, placeholder_text="Client ID")
 entry_username.pack(pady=20)
+
+# Create and pack the password entry
 entry_password = customtkinter.CTkEntry(root, placeholder_text="Password", show="*")
 entry_password.pack(pady=10)
 
-login_button= customtkinter.CTkButton(root, text="Login", command=login)
+# Create and pack the login button
+login_button = customtkinter.CTkButton(root, text="Login", command=login)
 login_button.pack(pady=15)
 
+# Bind the Return key to the login function
 root.bind('<Return>', lambda event=None: login())
 
 ###########
 ### Run ###
 ###########
 
+# Start the main event loop
 root.mainloop()

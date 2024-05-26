@@ -1,13 +1,26 @@
-# Lucas Mathews - Fontys Student ID: 5023572
-# Banking System App Connection file
-
 import requests
-from requests.models import PreparedRequest, Response
+from requests.models import Response
 from config import CONFIG
 import json
 
+##############
+### System ###
+##############
+
+def format_balance(balance):
+    """
+    Formats the balance as a currency string with comma separators.
+    """
+    return f"€{balance:,.2f}"
+
+#####################
+### API Functions ###
+#####################
 
 def authenticate_client(client_id, client_password):
+    """
+    Authenticates a client with the given client_id and client_password.
+    """
     try:
         response = requests.post(CONFIG["server"]["url"] + "/Client/Login", params={'client_id': client_id, 'password': client_password})
         return response
@@ -19,8 +32,11 @@ def authenticate_client(client_id, client_password):
         return response
     
 def logout_client():
+    """
+    Logs out the current client.
+    """
     try:
-        with open('application\\session_data.json', 'r') as f: # Open the session_data.json file in read mode
+        with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.post(CONFIG["server"]["url"] + "/Client/Logout", cookies=session_data['session_cookie'])
         return response
@@ -32,24 +48,26 @@ def logout_client():
         return response
 
 def get_client(client_id):
-    try:
-        with open('application\\session_data.json', 'r') as f: # Open the session_data.json file in read mode
-            session_data = json.load(f)
-        response = requests.get(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params={'client_id': client_id})
-        return response.json() 
-    except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
-        response = Response()
-        response.status_code = 500
-        response._content = b'{"success": false, "message": "Could not connect to the server. Please try again later."}'
-        return response.json() 
-    
-def update_client(client_id, email=None, phone_number=None, address=None):
+    """
+    Retrieves the client details for the given client_id.
+    """
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        
-        # Create a dictionary of parameters to update
+        response = requests.get(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params={'client_id': client_id})
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+
+def update_client(client_id, email=None, phone_number=None, address=None):
+    """
+    Updates the client details for the given client_id.
+    """
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
         params = {'client_id': client_id}
         if email is not None:
             params['email'] = email
@@ -57,95 +75,95 @@ def update_client(client_id, email=None, phone_number=None, address=None):
             params['phone_number'] = phone_number
         if address is not None:
             params['address'] = address
-
-        response = requests.put(
-            CONFIG["server"]["url"] + "/Client",
-            cookies=session_data['session_cookie'],
-            params=params
-        )
-        response.raise_for_status()  # Raise an exception if the request failed
+        response = requests.put(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params=params)
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
-    
+
 def get_accounts(client_id):
+    """
+    Retrieves the accounts associated with the given client_id.
+    """
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-
-        response = requests.get(
-            CONFIG["server"]["url"] + "/Client/Accounts",
-            cookies=session_data['session_cookie'],
-            params={'client_id': client_id}
-        )
-        response.raise_for_status()  # Raise an exception if the request failed
+        response = requests.get(CONFIG["server"]["url"] + "/Client/Accounts", cookies=session_data['session_cookie'], params={'client_id': client_id})
+        response.raise_for_status()
         accounts = response.json()
-        if isinstance(accounts, str):  # If the response is a string, convert it to a list of dictionaries
+        if isinstance(accounts, str):
             accounts = json.loads(accounts)
         return accounts
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
-    
-def format_balance(balance): # Formats the balance as a currency string with comma seperator
-    return f"€{balance:,.2f}"
 
 def get_transactions(account_id):
+    """
+    Retrieves the transactions for the given account_id.
+    """
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-
-        response = requests.get(
-            CONFIG["server"]["url"] + "/Account/Transactions",
-            cookies=session_data['session_cookie'],
-            params={'account_id': account_id}
-        )
-        response.raise_for_status()  # Raise an exception if the request failed
+        response = requests.get(CONFIG["server"]["url"] + "/Transaction/History", cookies=session_data['session_cookie'], params={'account_id': account_id})
+        response.raise_for_status()
         transactions = response.json()
-        if isinstance(transactions, str):  # If the response is a string, convert it to a list of dictionaries
+        if isinstance(transactions, str):
             transactions = json.loads(transactions)
         return transactions
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
-    
+
 def get_account(account_id):
+    """
+    Retrieves the account details for the given account_id.
+    """
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-
-        response = requests.get(
-            CONFIG["server"]["url"] + "/Account",
-            cookies=session_data['session_cookie'],
-            params={'account_id': account_id}
-        )
-        response.raise_for_status()  # Raise an exception if the request failed
-        return response.json()
+        response = requests.get(CONFIG["server"]["url"] + "/Account", cookies=session_data['session_cookie'], params={'account_id': account_id})
+        response.raise_for_status()
+        account = response.json()
+        if 'data' not in account or 'balance' not in account['data']:
+            print(f"Error: The account dictionary does not have a 'balance' key. Account: {account}")
+            return None
+        return account
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
-    
+
 def update_account(account_id, description=None, notes=None):
+    """
+    Updates the account details for the given account_id.
+    """
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        
-        # Create a dictionary of parameters to update
         params = {'account_id': account_id}
         if description is not None:
             params['description'] = description
         if notes is not None:
             params['notes'] = notes
-
-        response = requests.put(
-            CONFIG["server"]["url"] + "/Account",
-            cookies=session_data['session_cookie'],
-            params=params
-        )
-        response.raise_for_status()  # Raise an exception if the request failed
+        response = requests.put(CONFIG["server"]["url"] + "/Account", cookies=session_data['session_cookie'], params=params)
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
-    
+
+def new_transaction(account):
+    """
+    Creates a new transaction for the given account.
+    """
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
+        params = {'account_id': account['account_id']}
+        response = requests.post(CONFIG["server"]["url"] + "/Transaction/History", cookies=session_data['session_cookie'], params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
