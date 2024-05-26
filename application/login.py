@@ -14,8 +14,8 @@ from config import CONFIG
 #################
 
 def login():
-    client_id = entry_username.get()
-    client_password = entry_password.get()
+    client_id = entry_username.get() if entry_username.get() else CONFIG["client"]["default_id"]
+    client_password = entry_password.get() if entry_password.get() else CONFIG["client"]["default_password"]
     try:
         response = authenticate_client(client_id, client_password) # Authenticate the client
         json_response = response.json() # Convert the response content to JSON
@@ -37,8 +37,10 @@ def login():
 ### Layout ###
 ##############
 
-customtkinter.set_appearance_mode((CONFIG["preferences"]["dark_theme"]))  # Modes: system (default), light, dark
-customtkinter.set_default_color_theme((CONFIG["preferences"]["theme"]))  # Themes: blue (default), dark-blue, green
+if CONFIG["preferences"]["dark_theme"] == "dark": # Check if dark mode is enabled
+    customtkinter.set_appearance_mode("dark") # Set the style for dark mode
+else:
+    customtkinter.set_appearance_mode("light") # Set the style for light mode
 
 root = customtkinter.CTk()
 

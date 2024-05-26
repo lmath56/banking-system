@@ -6,18 +6,13 @@ from tkinter import messagebox, ttk
 import customtkinter
 import json
 from config import CONFIG
-
-
+import os
 from connection import logout_client, get_client, update_client, get_accounts, format_balance
-
 
 email_entry = None
 phone_entry = None
 address_entry = None
 frame = None
-
-
-
 
 #################
 ### Functions ###
@@ -98,54 +93,38 @@ def save_details():
     new_email = email_entry.get() if email_entry.get() != '' else None
     new_phone = phone_entry.get() if phone_entry.get() != '' else None
     new_address = address_entry.get() if address_entry.get() != '' else None
-
-    # Get the client_id from the session data
     with open('application\\session_data.json', 'r') as f:
         session_data = json.load(f)
     client_id = session_data['client_id']
-
-    # Display a confirmation dialog box
     if not messagebox.askyesno("Confirmation", "Are you sure you want to update the details?"):
         return  # If the user clicked 'No', exit the function
-
-    # Update the client details
     result = update_client(client_id, new_email, new_phone, new_address)
-    # If the request was successful, update the client info displayed in the main window
     if result['success']:
         display_client_info()
-
-    # Destroy the window after updating the client info
-    edit_window.destroy()
+    edit_window.destroy() 
 
 def populate_table():
-    # Get the client_id from the session data
-    with open('application\\session_data.json', 'r') as f:
+    with open('application\\session_data.json', 'r') as f:  # Get the client_id from the session data
         session_data = json.load(f)
     client_id = session_data['client_id']
-
-    # Get the accounts for the client
-    response = get_accounts(client_id)
+    response = get_accounts(client_id) # Get the accounts for the client
     accounts = response['data'] if 'data' in response else []
-
-    # Check if accounts is a list
-    if not isinstance(accounts, list):
+    if not isinstance(accounts, list): # Check if accounts is a list
         print(f"Error: Expected a list of accounts, but got {type(accounts)}")
         return
-
-    # Populate the table with the accounts
-    for account in accounts:
+    for account in accounts:  # Populate the table with the accounts
         formatted_balance = format_balance(account['balance'])
         table.insert('', 'end', values=(account['description'], account['account_id'], formatted_balance, account['account_type']))
 
 def on_account_double_click(event):
-    # Get the selected account
-    selected_account = table.item(table.selection())
+    try:
+        selected_account = table.item(table.selection()) # Get the selected account
+        session = json.load(open('application\\session_data.json', 'r')) # Get the session data
+        account_description = selected_account['values'][0]
+        os.system(f"python application\\account.py {selected_account['values'][1]} {session['client_id']} \"{account_description}\"")
+    except Exception as e:
+        print(f"Error: {e}")
 
-    # Open a new window
-    account_window = tk.Toplevel(root)
-
-    # Display the account details
-    display_account_details(account_window, selected_account)
 
 ##############
 ### Layout ###
@@ -157,13 +136,10 @@ root.title("Luxbank Dashboard")
 root.iconbitmap("application/luxbank.ico")
 root.geometry("800x350")
 
-# Check if dark mode is enabled
-if CONFIG["preferences"]["dark_theme"] == "dark":
-    # Set the style for dark mode
-    customtkinter.set_appearance_mode("dark")
+if CONFIG["preferences"]["dark_theme"] == "dark": # Check if dark mode is enabled
+    customtkinter.set_appearance_mode("dark") # Set the style for dark mode
 else:
-    # Set the style for light mode
-    customtkinter.set_appearance_mode("light")
+    customtkinter.set_appearance_mode("light") # Set the style for light mode
 
 # Create a label for the title
 welcome_label = customtkinter.CTkLabel(root, text="Welcome to the Luxbank Dashboard!", font=("Helvetica", 24))
@@ -179,14 +155,14 @@ table_frame = ttk.Frame(root)
 table_frame.pack(side='right', fill='both', expand=True)
 
 # Create the table
-table = ttk.Treeview(table_frame, columns=('Description', 'Account ID', 'Balance', 'Account Type'), show='headings')
-table.heading('Description', text='Description')
+table = ttk.Treeview(table_frame, columns=('Name', 'Account ID', 'Balance', 'Account Type'), show='headings')
+table.heading('Name', text='Name')
 table.heading('Account ID', text='Account ID')
 table.heading('Balance', text='Balance')
 table.heading('Account Type', text='Account Type')
 
 # Set the column widths
-table.column('Description', width=200)
+table.column('Name', width=200)
 table.column('Account ID', width=100)
 table.column('Balance', width=100)
 table.column('Account Type', width=100)

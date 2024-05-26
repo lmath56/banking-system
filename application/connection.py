@@ -110,3 +110,42 @@ def get_transactions(account_id):
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
     
+def get_account(account_id):
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
+
+        response = requests.get(
+            CONFIG["server"]["url"] + "/Account",
+            cookies=session_data['session_cookie'],
+            params={'account_id': account_id}
+        )
+        response.raise_for_status()  # Raise an exception if the request failed
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+    
+def update_account(account_id, description=None, notes=None):
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
+        
+        # Create a dictionary of parameters to update
+        params = {'account_id': account_id}
+        if description is not None:
+            params['description'] = description
+        if notes is not None:
+            params['notes'] = notes
+
+        response = requests.put(
+            CONFIG["server"]["url"] + "/Account",
+            cookies=session_data['session_cookie'],
+            params=params
+        )
+        response.raise_for_status()  # Raise an exception if the request failed
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+    
