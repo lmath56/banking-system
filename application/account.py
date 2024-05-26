@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import ttk
 import customtkinter
 import json
 from config import CONFIG
@@ -17,17 +17,6 @@ else:
     print("Error: Account description not provided.")
     sys.exit(1)
 
-def display_account_info():
-    response = get_account(account_id)
-    if response is None or 'data' not in response:  # Check if the response is valid
-        print(f"Error: Unable to fetch account details for account {account_id}")
-        return
-    account = response['data']
-    print(type(account['balance']))  # Print the type of the balance
-    formatted_balance = format_balance(account['balance'])
-    account_info = (account['description'], account['account_id'], formatted_balance, account['account_type'])
-    return account_info
-
 def populate_transactions_table(transactions_table, account_id):
     response = get_transactions(account_id)  # Fetch the transactions for the account
     print(f"Response from get_transactions: {response}")  # Print the response
@@ -38,6 +27,10 @@ def populate_transactions_table(transactions_table, account_id):
     if not isinstance(transactions, list):
         print(f"Error: Expected a list of transactions, but got {type(transactions)}")
         return
+    
+    # Sort transactions by timestamp in descending order
+    transactions.sort(key=lambda x: x['timestamp'], reverse=True)
+    
     for transaction in transactions:  # Insert the transactions into the transactions_table
         transactions_table.insert('', 'end', values=(
             transaction['transaction_id'], 
