@@ -13,6 +13,8 @@ import time # For OTP generation
 from functools import wraps # For decorators / user login
 from database import * # Importing the database connection
 from emailer import send_email # Importing the emailer function
+from flask import session as flask_session
+from database import session
 
 otps = {} # Temporary dictionary to store OTPs and their creation time
 
@@ -47,10 +49,12 @@ def format_response(success: bool, message: str = '', data: dict = None): # Form
         response['data'] = data
     return jsonify(response)
 
-def get_current_client(): # Returns the current client and if they are an administrator
+def get_current_client():
     client = flask_session['client_id']
-    is_admin = session.query(Client).filter_by(client_id=client).one_or_none().administrator
-    return client, is_admin
+    client_obj = session.query(Client).filter_by(client_id=client).one_or_none()
+    if client_obj is None:
+        return None, None
+    return client_obj.client_id, client_obj.administrator
 
 def verify_otp(client_id:str, otp:int): # Verifies a one time password for a client
     if client_id in otps and otps[client_id][0] == otp:
@@ -185,6 +189,17 @@ def change_password(client_id:str, password:str, new_password:str, otp:int): # C
                 return format_response(True, f"Password for client_id: {client_id} has been updated."), 200
             return format_response(False, "Invalid password."), 400
     return format_response(False, "Client not found."), 404
+
+@login_required
+def get_accounts(client_id: str):
+    current_client_id, is_admin = get_current_client()
+    if current_client_id is None:
+        # return an appropriate response or raise an exception
+        raise Exception("No current client found")
+    if not is_admin and client_id != current_client_id:
+        return format_response(False, "You can only view your own client information."), 403
+    accounts = session.query(Account).filter(Account.client_id == client_id)
+    return format_response(True, "", [account.to_dict() for account in accounts]), 200
 
 ###############
 ### Account ###

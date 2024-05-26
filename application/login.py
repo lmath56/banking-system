@@ -5,7 +5,9 @@ from tkinter import messagebox
 import customtkinter
 import os
 import json
-from connection import *
+import requests
+from connection import authenticate_client
+from config import CONFIG
 
 #################
 ### Functions ###
@@ -18,17 +20,18 @@ def login():
         response = authenticate_client(client_id, client_password) # Authenticate the client
         json_response = response.json() # Convert the response content to JSON
         if json_response["success"] == True: # If the authentication is successful, open the dashboard
-                # Save the session cookie to a file
-            with open('application\\session_cookie.json', 'w') as f:
-                json.dump(response.cookies.get_dict(), f)
+            session_data = {
+                'session_cookie': response.cookies.get_dict(),
+                'client_id': client_id
+            }
+            with open('application\\session_data.json', 'w') as f: # Save the session data to a file
+                json.dump(session_data, f)
             root.destroy()
             os.system("python application\\dashboard.py")
         else:
-            messagebox.showerror("Login failed", json_response["message"]) # If the authentication fails, show an error message
+            messagebox.showerror("Login failed", json_response["message"]) 
     except requests.exceptions.RequestException as e:
-        # If a RequestException is raised, show an error message that includes the exception message
         messagebox.showerror("Login failed", "Could not connect to the server. Please try again later. Error: " + str(e))
-
 
 ##############
 ### Layout ###
@@ -53,6 +56,8 @@ entry_password.pack(pady=10)
 
 login_button= customtkinter.CTkButton(root, text="Login", command=login)
 login_button.pack(pady=15)
+
+root.bind('<Return>', lambda event=None: login())
 
 ###########
 ### Run ###
