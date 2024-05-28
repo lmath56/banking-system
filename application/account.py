@@ -38,10 +38,33 @@ def populate_transactions_table(transactions_table, account_id):
             transaction['recipient_account_id']
         ))
 
+def display_account_info(account_id):
+    """Display the account information for the given account ID."""
+    account_info = get_account(account_id)  # Fetch the account details
+    if account_info is None or 'data' not in account_info:
+        messagebox.showerror("Error", "Could not fetch account details.")
+        return
+    account = account_info['data']
+    print(account)
+    if 'description' not in account:
+        messagebox.showerror("Error", "Account description not found.")
+        return
+    account_description = account['description']
+    fields = {'Account ID': account_id, 'Description': account_description, 'Balance': format_balance(account['balance']), 'Account Type': account['account_type']}
+    for i, (key, value) in enumerate(fields.items()):
+        label_key = customtkinter.CTkLabel(info_frame, text=f"{key}:", font=("Helvetica", 14))
+        label_value = customtkinter.CTkLabel(info_frame, text=value, font=("Helvetica", 14))
+        label_key.grid(row=0, column=i*2, sticky='w', padx=10)
+        label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
+
+
+
+
 ##############
 ### Layout ###
 ##############
 
+# Initialise the main window
 root = customtkinter.CTk()
 root.title(f"Transactions for: {account_description}")
 root.iconbitmap("application/luxbank.ico")
@@ -52,19 +75,24 @@ if CONFIG["preferences"]["dark_theme"] == "dark":  # Check if dark mode is enabl
 else:
     customtkinter.set_appearance_mode("light")  # Set the style for light mode
 
+# Display main window title
 welcome_label = customtkinter.CTkLabel(root, text=f"Transactions for: {account_description}", font=("Helvetica", 24))
-welcome_label.pack(pady=20)
+welcome_label.pack(pady=10)
+
+# Display account information
+info_frame = customtkinter.CTkFrame(root)
+info_frame.pack(fill=tk.X)
+display_account_info(account_id)
 
 table_frame = customtkinter.CTkFrame(root)
 table_frame.pack(fill=tk.BOTH, expand=True)
 
+# Create the transactions table
 transactions_table = ttk.Treeview(table_frame, columns=("Transaction ID", "Transaction Type", "Amount", "Timestamp", "Description", "Account ID", "Recipient Account ID"), show="headings")
 transactions_table.pack(fill=tk.BOTH, expand=True)
-
 for col in transactions_table["columns"]:
     transactions_table.heading(col, text=col)
-
-# Directly populate transactions table for the given account
 populate_transactions_table(transactions_table, account_id)
 
+# Start the main event loop
 root.mainloop()

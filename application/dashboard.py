@@ -18,7 +18,7 @@ frame = None
 def go_to_login():
     """Closes the current window and opens the login page."""
     root.destroy()
-    login_page()  # Replace with your function or class that opens the login page
+    os.system("python application/login.py")
 
 def logout():
     """Logs out the client and redirects to the login page."""
@@ -97,7 +97,6 @@ def save_details():
     new_email = email_entry.get() if email_entry.get() != '' else None
     new_phone = phone_entry.get() if phone_entry.get() != '' else None
     new_address = address_entry.get() if address_entry.get() != '' else None
-
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
