@@ -8,9 +8,7 @@ import json
 ##############
 
 def format_balance(balance):
-    """
-    Formats the balance as a currency string with comma separators.
-    """
+    """Formats the balance as a currency string with comma separators."""
     return f"€{balance:,.2f}"
 
 #####################
@@ -18,9 +16,7 @@ def format_balance(balance):
 #####################
 
 def authenticate_client(client_id, client_password):
-    """
-    Authenticates a client with the given client_id and client_password.
-    """
+    """Authenticates a client with the given client_id and client_password."""
     try:
         response = requests.post(CONFIG["server"]["url"] + "/Client/Login", params={'client_id': client_id, 'password': client_password})
         return response
@@ -32,9 +28,7 @@ def authenticate_client(client_id, client_password):
         return response
     
 def logout_client():
-    """
-    Logs out the current client.
-    """
+    """Logs out the current client."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -48,9 +42,7 @@ def logout_client():
         return response
 
 def get_client(client_id):
-    """
-    Retrieves the client details for the given client_id.
-    """
+    """Retrieves the client details for the given client_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -62,9 +54,7 @@ def get_client(client_id):
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def update_client(client_id, email=None, phone_number=None, address=None):
-    """
-    Updates the client details for the given client_id.
-    """
+    """Updates the client details for the given client_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -83,9 +73,7 @@ def update_client(client_id, email=None, phone_number=None, address=None):
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def get_accounts(client_id):
-    """
-    Retrieves the accounts associated with the given client_id.
-    """
+    """Retrieves the accounts associated with the given client_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -100,9 +88,7 @@ def get_accounts(client_id):
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def get_transactions(account_id):
-    """
-    Retrieves the transactions for the given account_id.
-    """
+    """Retrieves the transactions for the given account_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -117,9 +103,7 @@ def get_transactions(account_id):
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def get_account(account_id):
-    """
-    Retrieves the account details for the given account_id.
-    """
+    """Retrieves the account details for the given account_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -135,9 +119,7 @@ def get_account(account_id):
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def update_account(account_id, description=None, notes=None):
-    """
-    Updates the account details for the given account_id.
-    """
+    """Updates the account details for the given account_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -154,9 +136,7 @@ def update_account(account_id, description=None, notes=None):
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def new_transaction(account):
-    """
-    Creates a new transaction for the given account.
-    """
+    """Creates a new transaction for the given account."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)

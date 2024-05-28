@@ -19,6 +19,7 @@ class Account(Base):
     transactions = relationship("Transaction", foreign_keys='Transaction.account_id', backref="account")
                     
     def __init__(self, account_id, client_id, description, open_timestamp, account_type, balance, enabled, notes, transactions):
+        """Initialises the account object."""
         self.account_id = account_id
         self.client_id = client_id
         self.description = description
@@ -30,6 +31,7 @@ class Account(Base):
         self.transactions = transactions if transactions is not None else []
     
     def to_dict(self):
+        """Returns the account as a dictionary."""
         return {
             "account_id": self.account_id,
             "client_id": self.client_id,

@@ -1,7 +1,6 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import customtkinter
-import json
 from config import CONFIG
 from connection import get_transactions, format_balance, get_account
 import sys
@@ -14,23 +13,20 @@ if len(sys.argv) > 3:  # Check if the account description is provided as a comma
     account_id = sys.argv[1]
     account_description = sys.argv[3]
 else:
-    print("Error: Account description not provided.")
+    messagebox.showerror("Error", "Account ID and description were not provided by the server.")
     sys.exit(1)
 
 def populate_transactions_table(transactions_table, account_id):
+    """Populate the transactions table with data for the given account ID."""
     response = get_transactions(account_id)  # Fetch the transactions for the account
-    print(f"Response from get_transactions: {response}")  # Print the response
     if response is None or 'data' not in response:
-        print(f"Error: Unable to fetch transactions for account {account_id}")
+        messagebox.showerror("Error", "Could not fetch transactions for the account.")
         return
     transactions = response['data']
     if not isinstance(transactions, list):
-        print(f"Error: Expected a list of transactions, but got {type(transactions)}")
+        messagebox.showerror("Error", "Data is not formatted as expected.")
         return
-    
-    # Sort transactions by timestamp in descending order
-    transactions.sort(key=lambda x: x['timestamp'], reverse=True)
-    
+    transactions.sort(key=lambda x: x['timestamp'], reverse=True) # Sort transactions by timestamp in descending order
     for transaction in transactions:  # Insert the transactions into the transactions_table
         transactions_table.insert('', 'end', values=(
             transaction['transaction_id'], 

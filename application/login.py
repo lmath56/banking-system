@@ -6,13 +6,15 @@ import json
 import requests
 from connection import authenticate_client
 from config import CONFIG
+import configparser, sys
+
 
 #################
 ### Functions ###
 #################
 
 def login():
-    """Function to handle the login process."""
+    """Authenticate the client and open the dashboard if successful."""
     client_id = entry_username.get() if entry_username.get() else CONFIG["client"]["default_id"]
     client_password = entry_password.get() if entry_password.get() else CONFIG["client"]["default_password"]
     try:
@@ -31,6 +33,20 @@ def login():
             messagebox.showerror("Login failed", json_response["message"]) 
     except requests.exceptions.RequestException as e:
         messagebox.showerror("Login failed", f"Could not connect to the server. Please try again later. Error: {str(e)}")
+
+def change_dark_theme():
+    """Change the theme between dark and light."""
+    config = configparser.ConfigParser()
+    config.read('application/app.ini')
+    if 'preferences' in config:
+        current_theme = config.get('preferences', 'dark_theme')
+        new_theme = 'light' if current_theme == 'dark' else 'dark'
+        config.set('preferences', 'dark_theme', new_theme)
+        with open('application/app.ini', 'w') as configfile:
+            config.write(configfile)
+        os.execl(sys.executable, sys.executable, *sys.argv)
+    else:
+        messagebox.showerror("Error", "Could not change the theme. Please check the configuration file.")
 
 ##############
 ### Layout ###
@@ -63,6 +79,10 @@ entry_password.pack(pady=10)
 # Create and pack the login button
 login_button = customtkinter.CTkButton(root, text="Login", command=login)
 login_button.pack(pady=15)
+
+# Create and pack the theme change button
+theme_button = customtkinter.CTkButton(root, text="Change Theme", command=change_dark_theme)
+theme_button.pack(side='bottom', anchor='w')
 
 # Bind the Return key to the login function
 root.bind('<Return>', lambda event=None: login())

@@ -22,6 +22,7 @@ class Client(Base):
     accounts = relationship("Account", backref="client")
 
     def __init__(self, client_id, name, birthdate, opening_timestamp, address, phone_number, email, hash, notes, enabled, administrator, accounts):
+        """Initialises the client object."""
         self.client_id = client_id
         self.name = name
         self.birthdate = birthdate
@@ -36,6 +37,7 @@ class Client(Base):
         self.accounts = accounts if accounts is not None else []
     
     def to_dict(self):
+        """Returns the client as a dictionary."""
         return {
             "client_id": self.client_id,
             "name": self.name,

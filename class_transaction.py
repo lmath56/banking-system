@@ -16,6 +16,7 @@ class Transaction(Base):
     recipient_account_id = Column(String, ForeignKey('accounts.account_id'))
 
     def __init__(self, transaction_id, transaction_type, amount, timestamp, description, account_id, recipient_account_id = None):
+        """Initialises the Transaction object."""
         self.transaction_id = transaction_id
         self.transaction_type = transaction_type
         self.amount = amount
@@ -25,6 +26,7 @@ class Transaction(Base):
         self.recipient_account_id = recipient_account_id
 
     def to_dict(self):
+        """Converts the Transaction object to a dictionary."""
         return {
             "transaction_id": self.transaction_id,
             "transaction_type": self.transaction_type,

@@ -13,6 +13,7 @@ subject = "Test Email"
 body = "This is a test email."
 
 def send_email(receiver_email, subject, body):
+    """Sends an email to the specified receiver email address."""
     sender_email = CONFIG["smtp"]["sender_email"]
 
     message = MIMEMultipart() # Create a multipart message and set headers

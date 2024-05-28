@@ -15,6 +15,7 @@ from flask_session import Session # Imports the session module
 #################
 
 def create_app():
+    """Creates the API using Connexion."""
     app = connexion.FlaskApp(__name__)
     app.add_api(CONFIG["api_file"]["name"])
 
@@ -26,6 +27,7 @@ def create_app():
     return app
 
 def API():
+    """Runs the API."""
     app = create_app()
     app.run(host=CONFIG["server"]["listen_ip"], port=CONFIG["server"]["port"], debug=CONFIG["server"]["debug"]) # Runs the API using the configuration file
 

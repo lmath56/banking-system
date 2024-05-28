@@ -15,13 +15,18 @@ frame = None
 ### Functions ###
 #################
 
+def go_to_login():
+    """Closes the current window and opens the login page."""
+    root.destroy()
+    login_page()  # Replace with your function or class that opens the login page
+
 def logout():
-    """Logs out the client and closes the application."""
+    """Logs out the client and redirects to the login page."""
     response = logout_client()
     json_response = response.json()
     if json_response['success']:
         messagebox.showinfo("Logout", "You have been logged out.")
-        root.destroy()
+        go_to_login()
     else:
         messagebox.showerror("Logout failed", json_response['message'])
 
