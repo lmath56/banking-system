@@ -112,7 +112,7 @@ paths:
         '404':
           description: client_id not found
   /OTP/Generate:
-    get:
+    post:
       tags:
         - auth
       summary: Generate OTP
@@ -148,6 +148,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: otp_code
+          in: query
+          description: OTP to verify
+          required: true
+          schema:
+            type: integer
+            format: int32
         - name: name
           in: query
           description: Client Name
@@ -187,8 +194,12 @@ paths:
       responses:
         '200':
           description: Successful operation
-        '400':
+        '404':
           description: Invalid Client ID supplied
+        '403':
+          description: Unauthorised
+        '405':
+          description: OTP not valid
     get:
       tags:
         - client

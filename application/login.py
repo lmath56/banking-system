@@ -53,10 +53,13 @@ def change_dark_theme():
 ##############
 
 # Set appearance mode based on configuration
-if CONFIG["preferences"]["dark_theme"] == "dark":
-    customtkinter.set_appearance_mode("dark")
+if "preferences" in CONFIG and "dark_theme" in CONFIG["preferences"]:
+    if CONFIG["preferences"]["dark_theme"] == "dark":
+        customtkinter.set_appearance_mode("dark")
+    else:
+        customtkinter.set_appearance_mode("light")
 else:
-    customtkinter.set_appearance_mode("light")
+    customtkinter.set_appearance_mode("dark")
 
 # Initialize the main window
 root = customtkinter.CTk()

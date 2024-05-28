@@ -53,12 +53,12 @@ def get_client(client_id):
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
-def update_client(client_id, email=None, phone_number=None, address=None):
+def update_client(client_id, otp_code, email=None, phone_number=None, address=None):
     """Updates the client details for the given client_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        params = {'client_id': client_id}
+        params = {'client_id': client_id, 'otp_code': otp_code}
         if email is not None:
             params['email'] = email
         if phone_number is not None:
@@ -142,6 +142,19 @@ def new_transaction(account):
             session_data = json.load(f)
         params = {'account_id': account['account_id']}
         response = requests.post(CONFIG["server"]["url"] + "/Transaction/History", cookies=session_data['session_cookie'], params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+
+def generate_otp():
+    """Generates a new OTP for the current client, which is sent by Email."""
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
+        client_id = session_data['client_id']    
+        response = requests.post(CONFIG["server"]["url"] + "/OTP/Generate", cookies=session_data['session_cookie'], params={'client_id': client_id})
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:

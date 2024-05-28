@@ -162,9 +162,11 @@ def get_client(client_id:str):
     return format_response(False, "Client not found."), 404
 
 @login_required
-def update_client(client_id:str, **kwargs):
+def update_client(client_id:str, otp_code:int, **kwargs):
     """Updates a client in the database. If the client is not found, returns an error message."""
     current_client_id, is_admin = get_current_client()
+    if not verify_otp(current_client_id, otp_code):
+        return format_response(False, "Invalid OTP."), 405
     if not is_admin and client_id != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
     for client in session.query(Client).all():
