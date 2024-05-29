@@ -1,3 +1,6 @@
+# Lucas Mathews - Fontys Student ID: 5023572
+# Banking System Manager File
+
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -30,10 +33,12 @@ def send_email(receiver_email, subject, body):
         with smtplib.SMTP_SSL(CONFIG["smtp"]["host"], CONFIG["smtp"]["port"], context=context) as server:
             server.login(CONFIG["smtp"]["username"], CONFIG["smtp"]["password"])
             server.sendmail(sender_email, receiver_email, text)
-            print(f"Email sent to {receiver_email}.")
+            from manager import log_event
+            log_event(f"Email '{subject}' sent to {receiver_email}") # Log the message
     except Exception as e:
         error_message = f"Failed to send email to {receiver_email}: {e}"
-        print(error_message)
+        from manager import log_event
+        log_event(error_message) # Log the error
         raise EmailSendingError(error_message)
 
 

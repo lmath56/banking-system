@@ -119,6 +119,7 @@ session.commit()
 admin_client_id = session.query(Client.client_id).filter(Client.administrator == 1).first()[0]
 
 # Print the client_id of the administrator account
-print(f"The client_id of the administrator account of this test database is: {admin_client_id}. The password is: Happymeal1")
+print(f"The client_id of the administrator account of this test database is: {admin_client_id}")
+print("The password is: Happymeal1")
 
 session.close()

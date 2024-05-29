@@ -3,6 +3,7 @@ application/__pycache__/
 application/session_data.json
 bank.db
 test_database.db
+log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
