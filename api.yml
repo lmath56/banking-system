@@ -135,7 +135,7 @@ paths:
         '404':
           description: client_id not found
   /Client:
-    put:
+    post:
       tags:
         - client
       summary: Update an existing client

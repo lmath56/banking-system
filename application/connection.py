@@ -2,6 +2,7 @@ import requests
 from requests.models import Response
 from config import CONFIG
 import json
+from tkinter import messagebox
 
 ##############
 ### System ###
@@ -65,9 +66,14 @@ def update_client(client_id, otp_code, email=None, phone_number=None, address=No
             params['phone_number'] = phone_number
         if address is not None:
             params['address'] = address
-        response = requests.put(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params=params)
+        response = requests.post(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params=params)
         response.raise_for_status()
         return response.json()
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 400:
+            return {'success': False, 'message': "Invalid OTP."}
+        print(f"HTTPError: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
@@ -153,10 +159,12 @@ def generate_otp():
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        client_id = session_data['client_id']    
-        response = requests.post(CONFIG["server"]["url"] + "/OTP/Generate", cookies=session_data['session_cookie'], params={'client_id': client_id})
-        response.raise_for_status()
-        return response.json()
+        client_id = session_data['client_id']
+        response = requests.post(f"{CONFIG['server']['url']}/OTP/Generate", cookies=session_data['session_cookie'], params={'client_id': client_id})
+        if response.status_code == 200:
+            messagebox.showinfo("OTP", "OTP has been sent to your email.")
+        else:
+            response.raise_for_status()
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
-        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+        messagebox.showerror("Error", f"Could not generate OTP: {e}")

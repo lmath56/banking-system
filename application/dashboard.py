@@ -5,6 +5,7 @@ import os
 from config import CONFIG
 from connection import logout_client, get_client, update_client, get_accounts, format_balance, generate_otp
 
+
 # Global variables
 email_entry = None
 phone_entry = None
@@ -28,6 +29,16 @@ def logout():
     if json_response['success']:
         messagebox.showinfo("Logout", "You have been logged out.")
         go_to_login()
+    else:
+        messagebox.showerror("Logout failed", json_response['message'])
+
+def exit_application():
+    """Logs out the client and exits the application."""
+    response = logout_client()
+    json_response = response.json()
+    if json_response['success']:
+        messagebox.showinfo("Logout", "You have been logged out.")
+        root.quit()
     else:
         messagebox.showerror("Logout failed", json_response['message'])
 
@@ -70,7 +81,7 @@ def edit_details():
     global edit_window, email_entry, phone_entry, address_entry, otp_entry
     edit_window = customtkinter.CTkToplevel(root)
     edit_window.title("Edit Details")
-    edit_window.geometry("300x300")
+    edit_window.geometry("300x350")
     edit_window.iconbitmap("application/luxbank.ico")
     edit_window.attributes('-topmost', True)
 
@@ -89,16 +100,17 @@ def edit_details():
     address_label.pack()
     address_entry.pack()
 
-    # Add MFA verify button and text box
-    mfa_button = customtkinter.CTkButton(edit_window, text="Get OTP Code", command=generate_otp)
-    mfa_button.pack()
+    customtkinter.CTkLabel(edit_window, text=" ").pack()  # Add space under the address box
 
-    mfa_label = customtkinter.CTkLabel(edit_window, text="OTP Code: ")
+    otp_button = customtkinter.CTkButton(edit_window, text="Get OTP Code", command=generate_otp)
+    otp_button.pack()
+
+    otp_label = customtkinter.CTkLabel(edit_window, text="OTP Code: ")
     otp_entry = customtkinter.CTkEntry(edit_window)
-    mfa_label.pack()
+    otp_label.pack()
     otp_entry.pack()
 
-    save_button = customtkinter.CTkButton(edit_window, text="Verify MFA and Save", command=save_details)
+    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=save_details)
     save_button.pack()
     edit_window.lift()
 
@@ -109,18 +121,33 @@ def save_details():
     new_phone = phone_entry.get() if phone_entry.get() != '' else None
     new_address = address_entry.get() if address_entry.get() != '' else None
     otp_code = otp_entry.get()
+
+    if not otp_code:
+        messagebox.showerror("Error", "OTP code must be entered.")
+        return
+
     with open('application\\session_data.json', 'r') as f:
         session_data = json.load(f)
     client_id = session_data['client_id']
+
     if not messagebox.askyesno("Confirmation", "Are you sure you want to update the details?"):
         return
-    result = update_client(client_id, otp_code, new_email, new_phone, new_address)
-    if result['success']:
-        display_client_info()
-    else:
-        messagebox.showerror("Update Failed", result.get('message', 'Unknown error'))
-    edit_window.destroy()
-  
+
+    try:
+        result = update_client(client_id, otp_code, new_email, new_phone, new_address)
+        if result['success']:
+            display_client_info()
+            messagebox.showinfo("Success", "Details updated successfully.")
+            edit_window.destroy()
+        else:
+            if result['message'] == "Invalid OTP.":
+                messagebox.showerror("Error", "MFA details not correct. Please try again.")
+            else:
+                messagebox.showerror("Update Failed", result.get('message', 'Unknown error'))
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+
 def populate_table():
     """Populates the accounts table with client accounts."""
     try:
@@ -169,13 +196,21 @@ welcome_label.pack(pady=20)
 
 display_client_info()
 
-# Create a logout button
-logout_button = customtkinter.CTkButton(root, text="Logout", command=logout)
-logout_button.pack(pady=15)
+# Create a frame for buttons
+button_frame = customtkinter.CTkFrame(root)
+button_frame.pack(pady=15, side='top')
 
-# Create the MFA button
-mfa_button = customtkinter.CTkButton(root, text="MFA", command=generate_otp)
-mfa_button.pack(pady=15, side='left')
+# Create the OTP button
+otp_button = customtkinter.CTkButton(button_frame, text="Get OTP Code", command=generate_otp)
+otp_button.pack(side='left', padx=5)
+
+# Create the logout button
+logout_button = customtkinter.CTkButton(button_frame, text="Logout", command=logout)
+logout_button.pack(side='left', padx=5)
+
+# Create the exit button
+exit_button = customtkinter.CTkButton(button_frame, text="Exit", command=exit_application)
+exit_button.pack(side='left', padx=5)
 
 # Create a frame for the table
 table_frame = ttk.Frame(root)

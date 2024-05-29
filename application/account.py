@@ -57,9 +57,6 @@ def display_account_info(account_id):
         label_key.grid(row=0, column=i*2, sticky='w', padx=10)
         label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
 
-
-
-
 ##############
 ### Layout ###
 ##############
@@ -86,6 +83,16 @@ display_account_info(account_id)
 
 table_frame = customtkinter.CTkFrame(root)
 table_frame.pack(fill=tk.BOTH, expand=True)
+
+# Add buttons for adding a new transaction, requesting the OTP, and editing the account details
+button_frame = customtkinter.CTkFrame(root)
+button_frame.pack(fill=tk.X, pady=10)
+add_transaction_button = customtkinter.CTkButton(button_frame, text="Add Transaction", command=add_transaction)
+add_transaction_button.grid(row=0, column=0, padx=10)
+request_otp_button = customtkinter.CTkButton(button_frame, text="Request OTP", command=request_otp)
+request_otp_button.grid(row=0, column=1, padx=10)
+edit_account_details_button = customtkinter.CTkButton(button_frame, text="Edit Account Details", command=edit_account_details)
+edit_account_details_button.grid(row=0, column=2, padx=10)
 
 # Create the transactions table
 transactions_table = ttk.Treeview(table_frame, columns=("Transaction ID", "Transaction Type", "Amount", "Timestamp", "Description", "Account ID", "Recipient Account ID"), show="headings")

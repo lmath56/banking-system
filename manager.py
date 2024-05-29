@@ -4,6 +4,7 @@
 from class_client import Client
 from class_account import Account
 from class_transaction import Transaction
+from emailer import EmailSendingError # Import the EmailSendingError class to handle email sending errors
 from flask import jsonify, session as flask_session  # Imports the Flask modules
 import hashlib # For password hashing
 import datetime # For timestamps
@@ -133,17 +134,27 @@ def admin_required(f):
     return decorated_function
 
 @login_required
-def generate_otp(client_id:str):
-    """Generates a one time password for a client and sends it to their email address. Returns a success message if the OTP is generated and an error message otherwise."""
+def generate_otp(client_id: str):
+    """Generates a one-time password for a client and sends it to their email address. Returns a success message if the OTP is generated and an error message otherwise."""
     current_client_id, is_admin = get_current_client()
     if not is_admin and client_id != current_client_id:
-        return format_response(False, "You can only generate OTPs for your own client account."), 403   
+        return format_response(False, "You can only generate OTPs for your own client account."), 403
+
     email = get_email(client_id)
     if email:
         password = int(random.randint(100000, 999999))  # Generate a 6-digit OTP
-        send_email(email, "Luxbank One Time Password", f"Your one time password is: {password}"), 200 
-        otps[client_id] = (password, time.time())  # Store the OTP and the current time
-    return format_response(True, "Client not found."), 404
+        try:
+            send_email(email, "Luxbank One Time Password", f"Your one-time password is: {password}")
+            otps[client_id] = (password, time.time())  # Store the OTP and the current time
+            return format_response(True, "OTP generated and sent successfully."), 200
+        except EmailSendingError as e:
+            print(f"Error sending email: {e}")
+            error_message = "Error sending email. Please try again later."
+            if e.original_error:
+                error_message += f" Original error: {str(e.original_error)}"
+            return format_response(False, error_message), 500
+    else:
+        return format_response(False, "Email address not found for the client."), 404
 
 
 ##############
@@ -162,36 +173,24 @@ def get_client(client_id:str):
     return format_response(False, "Client not found."), 404
 
 @login_required
-def update_client(client_id:str, otp_code:int, **kwargs):
+def update_client(client_id: str, otp_code: int, **kwargs):
     """Updates a client in the database. If the client is not found, returns an error message."""
     current_client_id, is_admin = get_current_client()
     if not verify_otp(current_client_id, otp_code):
-        return format_response(False, "Invalid OTP."), 405
+        return format_response(False, "Invalid OTP."), 400  # Changed to 400 Bad Request
     if not is_admin and client_id != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
-    for client in session.query(Client).all():
-        if client.client_id == client_id:
-            name = kwargs.get("name", None)
-            birthdate = kwargs.get("birthdate", None)
-            address = kwargs.get("address", None)
-            phone_number = kwargs.get("phone_number", None)
-            email = kwargs.get("email", None)
-            notes = kwargs.get("notes", None)
-            if name:
-                client.name = name
-            if birthdate:
-                client.birthdate = birthdate
-            if address:
-                client.address = address
-            if phone_number:
-                client.phone_number = phone_number
-            if email:
-                client.email = email
-            if notes:
-                client.notes = notes
-            session.commit()
-            return format_response(True, f"client_id: {client_id} has been updated."), 200
+
+    client = session.query(Client).filter_by(client_id=client_id).first()
+    if client:
+        for field in ['name', 'birthdate', 'address', 'phone_number', 'email', 'notes']:
+            if field in kwargs and kwargs[field] is not None:
+                setattr(client, field, kwargs[field])
+        session.commit()
+        return format_response(True, f"Client ID: {client_id} has been updated."), 200
+
     return format_response(False, "Client not found."), 404
+
 
 @login_required
 def change_password(client_id:str, password:str, new_password:str, otp:int):
