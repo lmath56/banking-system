@@ -6,7 +6,7 @@ import customtkinter
 import json
 import os
 from config import CONFIG
-from connection import logout_client, get_client, update_client, get_accounts, format_balance, generate_otp
+from connection import logout_client, get_client, update_client, get_accounts, format_balance, generate_otp, change_password
 
 
 # Global variables
@@ -112,7 +112,7 @@ def edit_details():
     otp_label.pack()
     otp_entry.pack()
 
-    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=save_details)
+    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=change_password_save)
     save_button.pack()
     edit_window.lift()
 
@@ -186,6 +186,82 @@ def reload_info_and_accounts():
     display_client_info()
     populate_table()
 
+def change_password_box():
+    """Opens a new window for changing the client's password."""
+    global edit_window,password_entry, old_password_entry, confirm_password_entry, otp_entry
+    edit_window = customtkinter.CTkToplevel(root)
+    edit_window.title("Change Password")
+    edit_window.iconbitmap("application/luxbank.ico")
+    edit_window.geometry("300x350")
+    edit_window.attributes('-topmost', True)
+
+    old_password_label = customtkinter.CTkLabel(edit_window, text="Old Password: ")
+    old_password_entry = customtkinter.CTkEntry(edit_window, show="*")
+    old_password_label.pack()
+    old_password_entry.pack()
+
+    customtkinter.CTkLabel(edit_window, text=" ").pack()  # Add space under the old password box
+
+    password_label = customtkinter.CTkLabel(edit_window, text="New Password: ")
+    password_entry = customtkinter.CTkEntry(edit_window, show="*")
+    password_label.pack()
+    password_entry.pack()
+
+    confirm_password_label = customtkinter.CTkLabel(edit_window, text="Confirm Password: ")
+    confirm_password_entry = customtkinter.CTkEntry(edit_window, show="*")
+    confirm_password_label.pack()
+    confirm_password_entry.pack()
+
+    customtkinter.CTkLabel(edit_window, text=" ").pack()  # Add space under the confirm password box
+
+    otp_button = customtkinter.CTkButton(edit_window, text="Get OTP Code", command=generate_otp)
+    otp_button.pack()
+
+    otp_label = customtkinter.CTkLabel(edit_window, text="OTP Code: ")
+    otp_entry = customtkinter.CTkEntry(edit_window)
+    otp_label.pack()
+    otp_entry.pack()
+
+    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=change_password_save)
+    save_button.pack()
+    edit_window.lift()
+
+def change_password_save():
+    """Saves the updated client password."""
+    global edit_window, otp_entry, password_entry, old_password_entry, confirm_password_entry
+    old_password = old_password_entry.get()
+    new_password = password_entry.get()
+    confirm_password = confirm_password_entry.get()
+    otp_code = otp_entry.get()
+
+    if not otp_code:
+        messagebox.showerror("Error", "OTP code must be entered.")
+        return
+
+    if not new_password or not confirm_password:
+        messagebox.showerror("Error", "New password and confirm password must be entered.")
+        return
+
+    if new_password != confirm_password:
+        messagebox.showerror("Error", "New password and confirm password do not match.")
+        return
+
+    with open('application\\session_data.json', 'r') as f:
+        session_data = json.load(f)
+    client_id = session_data['client_id']
+
+    if not messagebox.askyesno("Confirmation", "Are you sure you want to change the password?"):
+        return
+
+    try:
+        response = change_password(client_id, old_password, new_password, otp_code)
+        if response['success']:
+            messagebox.showinfo("Success", "Password changed successfully.")
+            edit_window.destroy()
+        else:
+            messagebox.showerror("Error", f"Could not change password: {response['message']}")
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not change password: {str(e)}")
 
 ##############
 ### Layout ###
@@ -215,13 +291,17 @@ otp_button.grid(row=0, column=0, padx=5)
 reload_button = customtkinter.CTkButton(button_frame, text="Reload", command=reload_info_and_accounts)
 reload_button.grid(row=0, column=1, padx=5)
 
+# Create reset password button
+password_button = customtkinter.CTkButton(button_frame, text="Reset Password", command=change_password_box)
+password_button.grid(row=0, column=2, padx=5)
+
 # Create the logout button
 logout_button = customtkinter.CTkButton(button_frame, text="Logout", command=logout)
-logout_button.grid(row=0, column=2, padx=5)
+logout_button.grid(row=0, column=3, padx=5)
 
 # Create the exit button
 exit_button = customtkinter.CTkButton(button_frame, text="Exit", command=exit_application)
-exit_button.grid(row=0, column=3, padx=5)
+exit_button.grid(row=0, column=4, padx=5)
 
 # Display client info after creating the buttons
 frame = customtkinter.CTkFrame(root)

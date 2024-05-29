@@ -1,10 +1,11 @@
 # Lucas Mathews - Fontys Student ID: 5023572
 # Banking System Connection Page
 
+import json
 import requests
+import hashlib
 from requests.models import Response
 from config import CONFIG
-import json
 from tkinter import messagebox
 
 ##############
@@ -15,22 +16,25 @@ def format_balance(balance):
     """Formats the balance as a currency string with comma separators."""
     return f"€{balance:,.2f}"
 
+def hash_password(password:str):
+    """Hashes a password using the SHA-512 algorithm and returns the hexadecimal representation of the hash."""
+    return hashlib.sha512(password.encode()).hexdigest()
+
 #####################
 ### API Functions ###
 #####################
 
-def authenticate_client(client_id, client_password):
-    """Authenticates a client with the given client_id and client_password."""
+def authenticate_client(client_id, client_hash):
+    """Authenticates a client with the given client_id and client_hash."""
     try:
-        response = requests.post(CONFIG["server"]["url"] + "/Client/Login", params={'client_id': client_id, 'password': client_password})
+        response = requests.post(CONFIG["server"]["url"] + "/Client/Login", json={'client_id': client_id, 'client_hash': client_hash})
+        response.raise_for_status()
+        if response.status_code == 401:
+            return {'success': False, 'message': "Incorrect password."}
         return response
     except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
-        response = Response()
-        response.status_code = 500
-        response._content = b'{"success": false, "message": "Could not connect to the server. Please try again later."}'
-        return response
-    
+        raise e  # Re-raise the exception to handle it in the login function
+
 def logout_client():
     """Logs out the current client."""
     try:
@@ -176,3 +180,40 @@ def generate_otp():
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         messagebox.showerror("Error", f"Could not generate OTP: {e}")
+
+def change_password(client_id, old_password, new_password, otp_code):
+    """Changes the password for the given client_id."""
+    hash_old_password = hash_password(old_password)
+    hash_new_password = hash_password(new_password)
+    try:
+        otp_code = int(otp_code)  # Ensure otp_code is an integer
+    except ValueError:
+        return {'success': False, 'message': "Invalid OTP code format: must be an integer."}
+    
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
+        payload = { # Prepare the payload to be sent in the request body
+            'client_id': client_id,
+            'hash_old_password': hash_old_password,
+            'hash_new_password': hash_new_password,
+            'otp_code': otp_code
+        } 
+        response = requests.put( # Send the PUT request with the payload in the body
+            CONFIG["server"]["url"] + "/Client/Password",
+            cookies=session_data['session_cookie'],
+            json=payload  # use json to send the data in the request body
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 400:
+            return {'success': False, 'message': response.json().get('message', 'Invalid request.')}
+        elif response.status_code == 401:
+            return {'success': False, 'message': response.json().get('message', 'Unauthorised action.')}
+        elif response.status_code == 404:
+            return {'success': False, 'message': response.json().get('message', 'Client not found.')}
+        else:
+            return {'success': False, 'message': "An error occurred. Please try again later."}
+    except requests.exceptions.RequestException as e:
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}

@@ -29,24 +29,46 @@ paths:
       summary: Log in to the system
       description: Log in to the system
       operationId: manager.login
-      parameters:
-        - name: client_id
-          in: query
-          description: client_id
-          required: true
-          schema:
-            type: string
-        - name: password
-          in: query
-          description: Password
-          required: true
-          schema:
-            type: string
+      requestBody:
+        description: Login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_id:
+                  type: string
+                  description: Client ID
+                client_hash:
+                  type: string
+                  description: Hashed password
+              required:
+                - client_id
+                - client_hash
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
         '401':
           description: Invalid Client ID/password supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
   /Client/Logout:
     post:
       tags:
@@ -78,39 +100,40 @@ paths:
       summary: Change password
       description: Change password
       operationId: manager.change_password
-      parameters:
-        - name: client_id
-          in: query
-          description: ID of client to change password
-          required: true
-          schema:
-            type: string
-        - name: password
-          in: query
-          description: New password
-          required: true
-          schema:
-            type: string
-        - name: new_password
-          in: query
-          description: New password
-          required: true
-          schema:
-            type: string
-        - name: otp
-          in: query
-          description: OTP to verify
-          required: true
-          schema:
-            type: integer
-            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_id:
+                  type: string
+                  description: ID of client to change password
+                hash_old_password:
+                  type: string
+                  description: Old password as a hash
+                hash_new_password:
+                  type: string
+                  description: New password as a hash
+                otp_code:
+                  type: integer
+                  format: int32
+                  description: OTP to verify
+              required:
+                - client_id
+                - hash_old_password
+                - hash_new_password
+                - otp_code
       responses:
         '200':
           description: Password changed successfully
         '400':
-          description: Old password incorrect
+          description: Validation error
+        '401':
+          description: Unauthorised
         '404':
-          description: client_id not found
+          description: Client not found
   /OTP/Generate:
     post:
       tags:

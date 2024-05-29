@@ -4,7 +4,7 @@ import customtkinter
 import os
 import json
 import requests
-from connection import authenticate_client
+from connection import authenticate_client, hash_password
 from config import CONFIG
 import configparser, sys
 
@@ -17,10 +17,11 @@ def login():
     """Authenticate the client and open the dashboard if successful."""
     client_id = entry_username.get() if entry_username.get() else CONFIG["client"]["default_id"]
     client_password = entry_password.get() if entry_password.get() else CONFIG["client"]["default_password"]
+    client_hash = hash_password(client_password)  # Hash the password on the client-side
     try:
-        response = authenticate_client(client_id, client_password)  # Authenticate the client
+        response = authenticate_client(client_id, client_hash)  # Authenticate the client
         json_response = response.json()  # Convert the response content to JSON
-        if json_response["success"]:  # If the authentication is successful, open the dashboard
+        if response.status_code == 200 and json_response.get("success"):  # If the authentication is successful, open the dashboard
             session_data = {
                 'session_cookie': response.cookies.get_dict(),
                 'client_id': client_id
@@ -29,10 +30,14 @@ def login():
                 json.dump(session_data, f)
             root.destroy()
             os.system("python application/dashboard.py")
+        elif response.status_code == 401:
+                messagebox.showerror("Login failed", "Invalid client ID or password.")
         else:
-            messagebox.showerror("Login failed", json_response["message"]) 
-    except requests.exceptions.RequestException as e:
-        messagebox.showerror("Login failed", f"Could not connect to the server. Please try again later. Error: {str(e)}")
+                messagebox.showerror("Login failed", json_response.get("message", "Unknown error"))
+    except requests.exceptions.HTTPError:
+        messagebox.showerror("Login failed", "Invalid client ID or password.")
+    except requests.exceptions.ConnectionError:
+        messagebox.showerror("Connection Error", "Could not connect to the server.")
 
 def change_dark_theme():
     """Change the theme between dark and light."""

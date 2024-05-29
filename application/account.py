@@ -12,6 +12,7 @@ from connection import get_transactions, format_balance, get_account, generate_o
 description_entry = None
 notes_entry = None
 otp_entry = None
+notes_text = None
 
 #################
 ### Functions ###
@@ -64,6 +65,8 @@ def display_account_info(account_id):
         label_value = customtkinter.CTkLabel(info_frame, text=value, font=("Helvetica", 14))
         label_key.grid(row=0, column=i*2, sticky='w', padx=10)
         label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
+    global notes_text
+    notes_text.configure(text=account.get('notes', ''))  # Use config instead of configuration
 
 def on_transaction_double_click(event):
     """Handles double-click event on a transaction in the table."""
@@ -157,7 +160,7 @@ def save_details():
 root = customtkinter.CTk()
 root.title(f"Transactions for: {account_description}")
 root.iconbitmap("application/luxbank.ico")
-root.geometry("800x400")
+root.geometry("800x450")
 
 if CONFIG["preferences"]["dark_theme"] == "dark":  # Check if dark mode is enabled
     customtkinter.set_appearance_mode("dark")  # Set the style for dark mode
@@ -167,6 +170,12 @@ else:
 # Display main window title
 welcome_label = customtkinter.CTkLabel(root, text=f"Transactions for: {account_description}", font=("Helvetica", 24))
 welcome_label.pack(pady=10)
+
+# Create the notes label and text box
+notes_label = customtkinter.CTkLabel(root, text="Notes:", font=("Helvetica", 14))
+notes_label.pack(pady=10)
+notes_text = customtkinter.CTkLabel(root, height=4, width=50, wraplength=400)  # Use CTkLabel instead of CTkTextbox
+notes_text.pack(pady=10, fill=tk.BOTH, expand=True)  # Add fill and expand options
 
 # Display account information
 info_frame = customtkinter.CTkFrame(root)
