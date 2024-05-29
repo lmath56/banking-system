@@ -1,9 +1,17 @@
+# Lucas Mathews - Fontys Student ID: 5023572
+# Banking System Account Page
+
 import tkinter as tk
-from tkinter import ttk, messagebox
-import customtkinter
-from config import CONFIG
-from connection import get_transactions, format_balance, get_account
 import sys
+import os
+import customtkinter
+from tkinter import ttk, messagebox
+from config import CONFIG
+from connection import get_transactions, format_balance, get_account, generate_otp, update_account
+
+description_entry = None
+notes_entry = None
+otp_entry = None
 
 #################
 ### Functions ###
@@ -45,10 +53,10 @@ def display_account_info(account_id):
         messagebox.showerror("Error", "Could not fetch account details.")
         return
     account = account_info['data']
-    print(account)
     if 'description' not in account:
         messagebox.showerror("Error", "Account description not found.")
         return
+    global account_description
     account_description = account['description']
     fields = {'Account ID': account_id, 'Description': account_description, 'Balance': format_balance(account['balance']), 'Account Type': account['account_type']}
     for i, (key, value) in enumerate(fields.items()):
@@ -56,6 +64,90 @@ def display_account_info(account_id):
         label_value = customtkinter.CTkLabel(info_frame, text=value, font=("Helvetica", 14))
         label_key.grid(row=0, column=i*2, sticky='w', padx=10)
         label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
+
+def on_transaction_double_click(event):
+    """Handles double-click event on a transaction in the table."""
+    try:
+        selected_transaction = transactions_table.item(transactions_table.selection())
+        transaction_id = selected_transaction['values'][0]
+        command = f"python application\\transaction.py {transaction_id} \"{selected_transaction['values'][4]}\""
+        return_code = os.system(command)
+        if return_code != 0:
+            print(f"Error: The command failed with return code {return_code}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def add_transaction():
+    """Open the add transaction dialog."""
+    command = f"python application\\new_transaction.py {account_id}"
+    return_code = os.system(command)
+    if return_code != 0:
+        print(f"Error: The command failed with return code {return_code}")
+
+def edit_account_details():
+    """Opens a new window for editing the account details."""
+    global edit_window, otp_entry, description_entry, notes_entry
+    edit_window = customtkinter.CTkToplevel(root)
+    edit_window.title("Edit Account Details")
+    edit_window.iconbitmap("application/luxbank.ico")
+    edit_window.geometry("300x350")
+    edit_window.attributes('-topmost', True)
+
+    description_label = customtkinter.CTkLabel(edit_window, text="Description: ")
+    description_entry = customtkinter.CTkEntry(edit_window)
+    description_label.pack()
+    description_entry.pack()
+
+    notes_label = customtkinter.CTkLabel(edit_window, text="Notes: ")
+    notes_entry = customtkinter.CTkEntry(edit_window)
+    notes_label.pack()
+    notes_entry.pack()
+
+    customtkinter.CTkLabel(edit_window, text=" ").pack()  # Add space under the address box
+
+    otp_button = customtkinter.CTkButton(edit_window, text="Get OTP Code", command=generate_otp)
+    otp_button.pack()
+
+    otp_label = customtkinter.CTkLabel(edit_window, text="OTP Code: ")
+    otp_entry = customtkinter.CTkEntry(edit_window)
+    otp_label.pack()
+    otp_entry.pack()
+
+    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=save_details)
+    save_button.pack()
+    edit_window.lift()
+
+def save_details():
+    """Saves the edited account details."""
+    global edit_window, otp_entry, description_entry, notes_entry, account_description
+    description = description_entry.get() if description_entry.get() != '' else None
+    notes = notes_entry.get() if notes_entry.get() != '' else None
+    otp_code = otp_entry.get() if otp_entry.get() != '' else None
+
+    if not otp_code:
+        messagebox.showerror("Error", "OTP code must be entered.")
+        return
+
+    if not messagebox.askyesno("Confirmation", "Are you sure you want to save the changes?"):
+        return
+    
+    try:
+        result = update_account(account_id, otp_code, description, notes)
+        if 'success' in result and result['success']:
+            display_account_info(account_id)
+            messagebox.showinfo("Success", "Account details have been updated.")
+            root.title(f"Transactions for: {account_description}")  # Update the window title
+            welcome_label.configure(text=f"Transactions for: {account_description}")
+            edit_window.destroy()
+        else:
+            if result['message'] == "Invalid OTP.":
+                messagebox.showerror("Error", "Invalid OTP code. Please try again.")
+            else:
+                messagebox.showerror("Error", f"Could not update account details: {result['message']}")
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not update account details: {str(e)}")
+
+
 
 ##############
 ### Layout ###
@@ -89,7 +181,7 @@ button_frame = customtkinter.CTkFrame(root)
 button_frame.pack(fill=tk.X, pady=10)
 add_transaction_button = customtkinter.CTkButton(button_frame, text="Add Transaction", command=add_transaction)
 add_transaction_button.grid(row=0, column=0, padx=10)
-request_otp_button = customtkinter.CTkButton(button_frame, text="Request OTP", command=request_otp)
+request_otp_button = customtkinter.CTkButton(button_frame, text="Request OTP", command=generate_otp)
 request_otp_button.grid(row=0, column=1, padx=10)
 edit_account_details_button = customtkinter.CTkButton(button_frame, text="Edit Account Details", command=edit_account_details)
 edit_account_details_button.grid(row=0, column=2, padx=10)

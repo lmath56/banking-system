@@ -1,3 +1,6 @@
+# Lucas Mathews - Fontys Student ID: 5023572
+# Banking System Dashboard Page
+
 from tkinter import messagebox, ttk
 import customtkinter
 import json
@@ -12,6 +15,9 @@ phone_entry = None
 address_entry = None
 otp_entry = None
 frame = None
+
+fields = [('Name', 'name'), ('Client ID', 'client_id'), ('Email', 'email'), ('Phone', 'phone_number'),
+          ('Address', 'address'), ('Account Opened', 'opening_timestamp')]
 
 #################
 ### Functions ###
@@ -42,6 +48,7 @@ def exit_application():
     else:
         messagebox.showerror("Logout failed", json_response['message'])
 
+
 def display_client_info():
     """Displays the client's information on the dashboard."""
     global frame
@@ -50,7 +57,7 @@ def display_client_info():
             widget.destroy()
     else:
         frame = customtkinter.CTkFrame(root)
-        frame.pack(anchor='w', side='left', padx=20, pady=20)
+        frame.grid(row=1, column=0, padx=20, pady=20)
 
     try:
         with open('application\\session_data.json', 'r') as f:
@@ -59,12 +66,10 @@ def display_client_info():
         client_info = get_client(client_id)
         if client_info.get('success'):
             client = client_info['data']
-            fields = [('Name', 'name'), ('Client ID', 'client_id'), ('Email', 'email'), ('Phone', 'phone_number'),
-                      ('Address', 'address'), ('Account Opened', 'opening_timestamp')]
             for i, (display_name, key) in enumerate(fields):
                 value = client.get(key, 'N/A')
                 label_key = customtkinter.CTkLabel(frame, text=f"{display_name}: ", font=("Helvetica", 14))
-                label_value = customtkinter.CTkLabel(frame, text=value, font=("Helvetica", 14))
+                label_value = customtkinter.CTkLabel(frame, text=value, font=("Helvetica", 14), anchor='w')
                 label_key.grid(row=i, column=0, sticky='e')
                 label_value.grid(row=i, column=1, sticky='w')
         else:
@@ -73,16 +78,13 @@ def display_client_info():
     except Exception as e:
         messagebox.showerror("Error", f"Could not retrieve client information: {e}")
 
-    edit_button = customtkinter.CTkButton(frame, text="Edit Details", command=edit_details)
-    edit_button.grid(row=len(fields), column=0, columnspan=2)
-
 def edit_details():
     """Opens a new window for editing client details."""
     global edit_window, email_entry, phone_entry, address_entry, otp_entry
     edit_window = customtkinter.CTkToplevel(root)
     edit_window.title("Edit Details")
-    edit_window.geometry("300x350")
     edit_window.iconbitmap("application/luxbank.ico")
+    edit_window.geometry("300x350")
     edit_window.attributes('-topmost', True)
 
     email_label = customtkinter.CTkLabel(edit_window, text="Email: ")
@@ -143,14 +145,15 @@ def save_details():
             if result['message'] == "Invalid OTP.":
                 messagebox.showerror("Error", "MFA details not correct. Please try again.")
             else:
-                messagebox.showerror("Update Failed", result.get('message', 'Unknown error'))
+                messagebox.showerror("Error", f"Could not update client details: {result['message']}")
     except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {e}")
-
+        messagebox.showerror("Error", f"Could not update client details: {str(e)}")
 
 def populate_table():
     """Populates the accounts table with client accounts."""
-    try:
+    for row in table.get_children(): # Clear the table before populating it
+        table.delete(row)
+    try: 
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
         client_id = session_data['client_id']
@@ -178,6 +181,12 @@ def on_account_double_click(event):
     except Exception as e:
         print(f"Error: {e}")
 
+def reload_info_and_accounts():
+    """Reloads the client information and the accounts table."""
+    display_client_info()
+    populate_table()
+
+
 ##############
 ### Layout ###
 ##############
@@ -192,29 +201,41 @@ customtkinter.set_appearance_mode(CONFIG["preferences"].get("dark_theme", "light
 
 # Create a label for the title
 welcome_label = customtkinter.CTkLabel(root, text="Welcome to the Luxbank Dashboard!", font=("Helvetica", 24))
-welcome_label.pack(pady=20)
-
-display_client_info()
+welcome_label.grid(row=0, column=0, columnspan=2, pady=20)
 
 # Create a frame for buttons
 button_frame = customtkinter.CTkFrame(root)
-button_frame.pack(pady=15, side='top')
+button_frame.grid(row=1, column=0, columnspan=2, sticky='ew', pady=15)
 
 # Create the OTP button
 otp_button = customtkinter.CTkButton(button_frame, text="Get OTP Code", command=generate_otp)
-otp_button.pack(side='left', padx=5)
+otp_button.grid(row=0, column=0, padx=5)
+
+# Create the reload button
+reload_button = customtkinter.CTkButton(button_frame, text="Reload", command=reload_info_and_accounts)
+reload_button.grid(row=0, column=1, padx=5)
 
 # Create the logout button
 logout_button = customtkinter.CTkButton(button_frame, text="Logout", command=logout)
-logout_button.pack(side='left', padx=5)
+logout_button.grid(row=0, column=2, padx=5)
 
 # Create the exit button
 exit_button = customtkinter.CTkButton(button_frame, text="Exit", command=exit_application)
-exit_button.pack(side='left', padx=5)
+exit_button.grid(row=0, column=3, padx=5)
+
+# Display client info after creating the buttons
+frame = customtkinter.CTkFrame(root)
+frame.grid(row=2, column=0, padx=20, pady=20, sticky='n')  # Adjusted grid placement
+display_client_info()
 
 # Create a frame for the table
 table_frame = ttk.Frame(root)
-table_frame.pack(side='right', fill='both', expand=True)
+table_frame.grid(row=2, column=1, sticky='nsew')  # Adjusted grid placement
+
+# Configure the grid
+root.grid_rowconfigure(2, weight=1)  # Adjusted row index
+root.grid_columnconfigure(1, weight=1)
+
 
 # Create the table
 table = ttk.Treeview(table_frame, columns=('Name', 'Account ID', 'Balance', 'Account Type'), show='headings')

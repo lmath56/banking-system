@@ -1,3 +1,6 @@
+# Lucas Mathews - Fontys Student ID: 5023572
+# Banking System Connection Page
+
 import requests
 from requests.models import Response
 from config import CONFIG
@@ -124,12 +127,12 @@ def get_account(account_id):
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
-def update_account(account_id, description=None, notes=None):
+def update_account(account_id, otp_code:int, description=None, notes=None):
     """Updates the account details for the given account_id."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        params = {'account_id': account_id}
+        params = {'account_id': account_id, 'otp_code': otp_code}
         if description is not None:
             params['description'] = description
         if notes is not None:
@@ -137,6 +140,11 @@ def update_account(account_id, description=None, notes=None):
         response = requests.put(CONFIG["server"]["url"] + "/Account", cookies=session_data['session_cookie'], params=params)
         response.raise_for_status()
         return response.json()
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 400:
+            return {'success': False, 'message': "Invalid OTP."}
+        print(f"HTTPError: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}

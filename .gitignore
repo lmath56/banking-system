@@ -1,4 +1,8 @@
-flask_session
+flask_session/
+application/__pycache__/
+application/session_data.json
+bank.db
+test_database.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

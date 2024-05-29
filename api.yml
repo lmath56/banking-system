@@ -301,6 +301,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: otp_code
+          in: query
+          description: OTP to verify
+          required: true
+          schema:
+            type: integer
+            format: int32
         - name: description
           in: query
           description: Account description
