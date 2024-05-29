@@ -5,3 +5,4 @@ sqlalchemy
 flask-session
 faker
 customtkinter
+schedule

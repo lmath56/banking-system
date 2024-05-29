@@ -79,12 +79,17 @@ def delete_otp(client_id:str):
     if client_id in otps:
         del otps[client_id]
 
-def check_expired_otps():
+def clean_expired_otps():
     """Checks for expired OTPs and deletes them. An OTP is considered expired if it is older than 5 minutes."""
     current_time = time.time()
     expired_otps = [client_id for client_id, (otp, creation_time) in otps.items() if current_time - creation_time > 300]  # Find OTPs older than 5 minutes
+    otps_removed = 0
     for client_id in expired_otps:
         delete_otp(client_id)
+        otps_removed += 1
+    log_event(f"Cleaned {otps_removed} expired OTPs.")
+    
+
 
 def log_event(data_to_log:str):
     """Logs an event to the log file."""
@@ -108,7 +113,6 @@ def login():
         return format_response(True, f"{flask_session['client_id']} logged in successfully."), 200
     return format_response(False, "Invalid client_id or password."), 401
 
-        
 def logout():
     """Logs out a client. Returns a success message if the logout is successful and an error message otherwise."""
     if 'client_id' in flask_session:
@@ -167,7 +171,6 @@ def generate_otp(client_id: str):
             return format_response(False, error_message), 500
     else:
         return format_response(False, "Email address not found for the client."), 404
-
 
 ##############
 ### Client ###
@@ -377,6 +380,7 @@ def delete_client(client_id:str):
             if client.accounts == None:
                 session.delete(client)
                 session.commit()
+                log_event(f"Client ID: {client_id} has been removed by {flask_session['client_id']}.")
                 return format_response(True, f"client_id: {client_id} has been removed."), 200
             else:
                 return format_response(False, "Client has accounts and can not be removed."), 400
@@ -465,6 +469,7 @@ def modify_balance(transaction_id:int, amount:int):
 @admin_required
 def test_account_balances():
     """Checks all account balances in the database and returns a list of discrepancies."""
+    log_event(f"Account balances have been checked by {flask_session['client_id']}.")
     all_transactions = session.query(Transaction).all()# Get all transactions from the database
     calculated_balances = {} # Initialize a dictionary to store the calculated balance for each account
     for transaction in all_transactions: # Go through each transaction
@@ -489,6 +494,7 @@ def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str
     new_client = Client(client_id, name, birthdate, timestamp(), address, phone_number, email, hash_password(password), notes, 1, 0, None)
     session.add(new_client)
     session.commit()
+    log_event(f"New client has been added: client_id: {client_id} by {flask_session['client_id']}.")
     return format_response(True, f"New client has been added: client_id: {client_id}"), 200
 
 def initialise_database(password:str, email:str):

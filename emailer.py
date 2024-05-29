@@ -1,5 +1,5 @@
 # Lucas Mathews - Fontys Student ID: 5023572
-# Banking System Manager File
+# Banking System Emailer File
 
 import smtplib
 import ssl
