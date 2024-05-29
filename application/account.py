@@ -38,18 +38,18 @@ def populate_transactions_table(transactions_table, account_id):
     transactions.sort(key=lambda x: x['timestamp'], reverse=True) # Sort transactions by timestamp in descending order
     for transaction in transactions:  # Insert the transactions into the transactions_table
         transactions_table.insert('', 'end', values=(
-            transaction['transaction_id'], 
-            transaction['transaction_type'], 
+            transaction['description'], 
+            transaction['transaction_type'],
             format_balance(transaction['amount']), 
             transaction['timestamp'], 
-            transaction['description'], 
             transaction['account_id'], 
-            transaction['recipient_account_id']
+            transaction['recipient_account_id'],
+            transaction['transaction_id']
         ))
 
 def display_account_info(account_id):
     """Display the account information for the given account ID."""
-    account_info = get_account(account_id)  # Fetch the account details
+    account_info = get_account(account_id) 
     if account_info is None or 'data' not in account_info:
         messagebox.showerror("Error", "Could not fetch account details.")
         return
@@ -66,7 +66,7 @@ def display_account_info(account_id):
         label_key.grid(row=0, column=i*2, sticky='w', padx=10)
         label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
     global notes_text
-    notes_text.configure(text=account.get('notes', ''))  # Use config instead of configuration
+    notes_text.configure(text=account.get('notes', ''))
 
 def on_transaction_double_click(event):
     """Handles double-click event on a transaction in the table."""
@@ -101,6 +101,7 @@ def edit_account_details():
     description_label.pack()
     description_entry.pack()
 
+    
     notes_label = customtkinter.CTkLabel(edit_window, text="Notes: ")
     notes_entry = customtkinter.CTkEntry(edit_window)
     notes_label.pack()
@@ -108,6 +109,7 @@ def edit_account_details():
 
     customtkinter.CTkLabel(edit_window, text=" ").pack()  # Add space under the address box
 
+    # Add the OTP code entry and button
     otp_button = customtkinter.CTkButton(edit_window, text="Get OTP Code", command=generate_otp)
     otp_button.pack()
 
@@ -182,9 +184,6 @@ info_frame = customtkinter.CTkFrame(root)
 info_frame.pack(fill=tk.X)
 display_account_info(account_id)
 
-table_frame = customtkinter.CTkFrame(root)
-table_frame.pack(fill=tk.BOTH, expand=True)
-
 # Add buttons for adding a new transaction, requesting the OTP, and editing the account details
 button_frame = customtkinter.CTkFrame(root)
 button_frame.pack(fill=tk.X, pady=10)
@@ -195,12 +194,27 @@ request_otp_button.grid(row=0, column=1, padx=10)
 edit_account_details_button = customtkinter.CTkButton(button_frame, text="Edit Account Details", command=edit_account_details)
 edit_account_details_button.grid(row=0, column=2, padx=10)
 
+table_frame = customtkinter.CTkFrame(root)
+table_frame.pack(fill=tk.BOTH, expand=True)
+
 # Create the transactions table
-transactions_table = ttk.Treeview(table_frame, columns=("Transaction ID", "Transaction Type", "Amount", "Timestamp", "Description", "Account ID", "Recipient Account ID"), show="headings")
+transactions_table = ttk.Treeview(table_frame, columns=("Description", "Transaction Type", "Amount", "Timestamp", "Sender", "Recipient", "Transaction ID"), show="headings")
 transactions_table.pack(fill=tk.BOTH, expand=True)
 for col in transactions_table["columns"]:
     transactions_table.heading(col, text=col)
+
+transactions_table.column("Description", width=100)
+transactions_table.column("Timestamp", width=75)
+transactions_table.column("Transaction Type", width=50)
+transactions_table.column("Amount", width=20)
+transactions_table.column("Timestamp", width=75)
+transactions_table.column("Sender", width=20)
+transactions_table.column("Recipient", width=20)
+transactions_table.column("Transaction ID", width=100)
+
 populate_transactions_table(transactions_table, account_id)
+
+transactions_table.bind("<Double-1>", on_transaction_double_click)
 
 # Start the main event loop
 root.mainloop()

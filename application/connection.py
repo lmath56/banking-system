@@ -130,6 +130,22 @@ def get_account(account_id):
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+    
+def get_transaction(transaction_id):
+    """Retrieves the transaction details for the given transaction_id."""
+    try:
+        with open('application\\session_data.json', 'r') as f:
+            session_data = json.load(f)
+        response = requests.get(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params={'transaction_id': transaction_id})
+        response.raise_for_status()
+        return response.json()  # Return the JSON response directly
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return None, "Could not connect to the server. Please try again later."
+    except ValueError as ve:
+        print(f"ValueError: {ve}")
+        return None, "Invalid JSON response from server."
+    
 
 def update_account(account_id, otp_code:int, description=None, notes=None):
     """Updates the account details for the given account_id."""

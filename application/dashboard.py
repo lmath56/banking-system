@@ -6,7 +6,7 @@ import customtkinter
 import json
 import os
 from config import CONFIG
-from connection import logout_client, get_client, update_client, get_accounts, format_balance, generate_otp, change_password
+from connection import logout_client, get_client, update_client, get_accounts, format_balance, generate_otp, change_password, new_transaction
 
 
 # Global variables
@@ -284,24 +284,28 @@ button_frame = customtkinter.CTkFrame(root)
 button_frame.grid(row=1, column=0, columnspan=2, sticky='ew', pady=15)
 
 # Create the OTP button
-otp_button = customtkinter.CTkButton(button_frame, text="Get OTP Code", command=generate_otp)
-otp_button.grid(row=0, column=0, padx=5)
+otp_button = customtkinter.CTkButton(button_frame, text="Get OTP Code", command=generate_otp, width=100)
+otp_button.grid(row=0, column=0, padx=3)
 
-# Create the reload button
-reload_button = customtkinter.CTkButton(button_frame, text="Reload", command=reload_info_and_accounts)
-reload_button.grid(row=0, column=1, padx=5)
+# Create the OTP button
+transaction_button = customtkinter.CTkButton(button_frame, text="New Transaction", command=new_transaction, width=100)
+transaction_button.grid(row=0, column=1, padx=3)
 
 # Create reset password button
-password_button = customtkinter.CTkButton(button_frame, text="Reset Password", command=change_password_box)
-password_button.grid(row=0, column=2, padx=5)
+password_button = customtkinter.CTkButton(button_frame, text="Reset Password", command=change_password_box, width=100)
+password_button.grid(row=0, column=2, padx=3)
+
+# Create the reload button
+reload_button = customtkinter.CTkButton(button_frame, text="Refresh", command=reload_info_and_accounts, width=50)
+reload_button.grid(row=0, column=3, padx=3)
 
 # Create the logout button
-logout_button = customtkinter.CTkButton(button_frame, text="Logout", command=logout)
-logout_button.grid(row=0, column=3, padx=5)
+logout_button = customtkinter.CTkButton(button_frame, text="Logout", command=logout, width=50)
+logout_button.grid(row=0, column=4, padx=3)
 
 # Create the exit button
-exit_button = customtkinter.CTkButton(button_frame, text="Exit", command=exit_application)
-exit_button.grid(row=0, column=4, padx=5)
+exit_button = customtkinter.CTkButton(button_frame, text="Exit", command=exit_application, width=50)
+exit_button.grid(row=0, column=5, padx=3)
 
 # Display client info after creating the buttons
 frame = customtkinter.CTkFrame(root)
@@ -319,10 +323,8 @@ root.grid_columnconfigure(1, weight=1)
 
 # Create the table
 table = ttk.Treeview(table_frame, columns=('Name', 'Account ID', 'Balance', 'Account Type'), show='headings')
-table.heading('Name', text='Name')
-table.heading('Account ID', text='Account ID')
-table.heading('Balance', text='Balance')
-table.heading('Account Type', text='Account Type')
+for col in table['columns']:
+    table.heading(col, text=col)
 
 # Set the column widths
 table.column('Name', width=200)
