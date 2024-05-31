@@ -88,8 +88,6 @@ def clean_expired_otps():
         delete_otp(client_id)
         otps_removed += 1
     log_event(f"Cleaned {otps_removed} expired OTPs.")
-    
-
 
 def log_event(data_to_log:str):
     """Logs an event to the log file."""
@@ -331,11 +329,14 @@ def get_transaction(transaction_id:int):
     return format_response(True, "", transaction.to_dict()), 200
 
 @login_required
-def add_transaction(amount:int, account_id, recipient_account_id, **kwargs):
+def add_transaction(amount:int, account_id, recipient_account_id, otp_code:int, **kwargs):
     """Adds a new transaction to the database. If the account is not found, returns an error message."""
     current_client_id, is_admin = get_current_client()
     if not is_admin and account_id != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
+    otp_verified = verify_otp(current_client_id, otp_code) # Verify if the OTP is correct
+    if not otp_verified:
+        return format_response(False, "Invalid OTP."), 400
     transaction_id = generate_uuid()
     for account in session.query(Account).all():
         if account.account_id == account_id:
@@ -501,9 +502,10 @@ def initialise_database(password:str, email:str):
     """Initialises the database with an administrator client if no clients exist."""
     existing_clients = session.query(Client).all() # Check if any clients exist in the database
     if not existing_clients: # If no clients exist, create an administrator client
-        add_client('ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', 'ADMINISTRATOR', email, password)  # Add the administrator client
+        new_client = Client(generate_uuid_short(), "ADMIN", "ADMIN", timestamp(), "ADMIN", "ADMIN", email, hash_password(password), None, 1, 0, None)
+        session.add(new_client)
         session.commit()
-        admin_client = session.query(Client).filter_by(name='ADMINISTRATOR').one() # Retrieve the administrator client
+        admin_client = session.query(Client).filter_by(name='ADMIN').one() # Retrieve the administrator client
         admin_client.administrator = 1 # Set the new client as an administrator
         session.commit()
         log_event(f"Database initialised with administrator account with client_id {admin_client.client_id}.")

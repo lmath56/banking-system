@@ -5,14 +5,19 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import customtkinter
 from config import CONFIG
-from connection import 
+from connection import format_balance, get_account, new_transaction, generate_otp
 import sys
 
 #################
 ### Functions ###
 #################
 
-def get_transactoin
+if len(sys.argv) > 3:  # Check if the account description is provided as a command line argument
+    account_id = sys.argv[1]
+    account_description = sys.argv[3] # This is passed so that the window can be titled appopriately
+else:
+    messagebox.showerror("Error", "Account ID and description were not provided by the server.")
+    sys.exit(1)
 
 
 
@@ -34,3 +39,5 @@ else:
 # Display main window title
 welcome_label = customtkinter.CTkLabel(root, text=f"Transactions for: {account_description}", font=("Helvetica", 24))
 welcome_label.pack(pady=10)
+
+root.mainloop()

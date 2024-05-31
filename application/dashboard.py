@@ -84,7 +84,7 @@ def edit_details():
     edit_window = customtkinter.CTkToplevel(root)
     edit_window.title("Edit Details")
     edit_window.iconbitmap("application/luxbank.ico")
-    edit_window.geometry("300x350")
+    edit_window.geometry("300x330")
     edit_window.attributes('-topmost', True)
 
     email_label = customtkinter.CTkLabel(edit_window, text="Email: ")
@@ -112,7 +112,7 @@ def edit_details():
     otp_label.pack()
     otp_entry.pack()
 
-    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=change_password_save)
+    save_button = customtkinter.CTkButton(edit_window, text="Verify OTP and Save", command=save_details)
     save_button.pack()
     edit_window.lift()
 
@@ -287,25 +287,29 @@ button_frame.grid(row=1, column=0, columnspan=2, sticky='ew', pady=15)
 otp_button = customtkinter.CTkButton(button_frame, text="Get OTP Code", command=generate_otp, width=100)
 otp_button.grid(row=0, column=0, padx=3)
 
-# Create the OTP button
+# Create the new transaction button
 transaction_button = customtkinter.CTkButton(button_frame, text="New Transaction", command=new_transaction, width=100)
 transaction_button.grid(row=0, column=1, padx=3)
 
+# Create the edit client Details button
+transaction_button = customtkinter.CTkButton(button_frame, text="Edit Details", command=edit_details, width=100)
+transaction_button.grid(row=0, column=2, padx=3)
+
 # Create reset password button
 password_button = customtkinter.CTkButton(button_frame, text="Reset Password", command=change_password_box, width=100)
-password_button.grid(row=0, column=2, padx=3)
+password_button.grid(row=0, column=3, padx=3)
 
 # Create the reload button
 reload_button = customtkinter.CTkButton(button_frame, text="Refresh", command=reload_info_and_accounts, width=50)
-reload_button.grid(row=0, column=3, padx=3)
+reload_button.grid(row=0, column=4, padx=3)
 
 # Create the logout button
 logout_button = customtkinter.CTkButton(button_frame, text="Logout", command=logout, width=50)
-logout_button.grid(row=0, column=4, padx=3)
+logout_button.grid(row=0, column=5, padx=3)
 
 # Create the exit button
 exit_button = customtkinter.CTkButton(button_frame, text="Exit", command=exit_application, width=50)
-exit_button.grid(row=0, column=5, padx=3)
+exit_button.grid(row=0, column=6, padx=3)
 
 # Display client info after creating the buttons
 frame = customtkinter.CTkFrame(root)

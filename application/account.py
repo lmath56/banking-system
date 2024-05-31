@@ -20,7 +20,7 @@ notes_text = None
 
 if len(sys.argv) > 3:  # Check if the account description is provided as a command line argument
     account_id = sys.argv[1]
-    account_description = sys.argv[3]
+    account_description = sys.argv[3] # This is passed so that the window can be titled appopriately
 else:
     messagebox.showerror("Error", "Account ID and description were not provided by the server.")
     sys.exit(1)
@@ -71,8 +71,8 @@ def display_account_info(account_id):
 def on_transaction_double_click(event):
     """Handles double-click event on a transaction in the table."""
     try:
-        selected_transaction = transactions_table.item(transactions_table.selection())
-        transaction_id = selected_transaction['values'][0]
+        selected_transaction = transactions_table.item(transactions_table.selection()) 
+        transaction_id = selected_transaction['values'][-1]
         command = f"python application\\transaction.py {transaction_id} \"{selected_transaction['values'][4]}\""
         return_code = os.system(command)
         if return_code != 0:
@@ -187,18 +187,24 @@ display_account_info(account_id)
 # Add buttons for adding a new transaction, requesting the OTP, and editing the account details
 button_frame = customtkinter.CTkFrame(root)
 button_frame.pack(fill=tk.X, pady=10)
+
 add_transaction_button = customtkinter.CTkButton(button_frame, text="Add Transaction", command=add_transaction)
 add_transaction_button.grid(row=0, column=0, padx=10)
+
 request_otp_button = customtkinter.CTkButton(button_frame, text="Request OTP", command=generate_otp)
 request_otp_button.grid(row=0, column=1, padx=10)
+
 edit_account_details_button = customtkinter.CTkButton(button_frame, text="Edit Account Details", command=edit_account_details)
 edit_account_details_button.grid(row=0, column=2, padx=10)
+
+close_button = customtkinter.CTkButton(button_frame, text="Close", command=root.destroy)
+close_button.grid(row=0, column=3, padx=10)
 
 table_frame = customtkinter.CTkFrame(root)
 table_frame.pack(fill=tk.BOTH, expand=True)
 
 # Create the transactions table
-transactions_table = ttk.Treeview(table_frame, columns=("Description", "Transaction Type", "Amount", "Timestamp", "Sender", "Recipient", "Transaction ID"), show="headings")
+transactions_table = ttk.Treeview(table_frame, columns=("Description", "Transaction Type", "Amount", "Timestamp", "Sender", "Recipient"), show="headings")
 transactions_table.pack(fill=tk.BOTH, expand=True)
 for col in transactions_table["columns"]:
     transactions_table.heading(col, text=col)
@@ -210,7 +216,6 @@ transactions_table.column("Amount", width=20)
 transactions_table.column("Timestamp", width=75)
 transactions_table.column("Sender", width=20)
 transactions_table.column("Recipient", width=20)
-transactions_table.column("Transaction ID", width=100)
 
 populate_transactions_table(transactions_table, account_id)
 

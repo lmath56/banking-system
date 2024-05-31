@@ -436,11 +436,20 @@ paths:
           required: false
           schema:
             type: string
+        - name: otp_code
+          in: query
+          description: OTP to verify
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         '200':
           description: Successful operation
         '400':
           description: Invalid input
+        '403':
+          description: Invalid OTP
         '401':
           description: Insufficient funds
         '404':

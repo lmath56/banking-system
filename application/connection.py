@@ -138,14 +138,14 @@ def get_transaction(transaction_id):
             session_data = json.load(f)
         response = requests.get(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params={'transaction_id': transaction_id})
         response.raise_for_status()
-        return response.json()  # Return the JSON response directly
+        transaction = response.json()
+        if 'data' not in transaction or 'description' not in transaction['data']:
+            print(f"Error: The transaction dictionary does not have a 'data' key. Transaction: {transaction}")
+            return None
+        return transaction
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
-        return None, "Could not connect to the server. Please try again later."
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        return None, "Invalid JSON response from server."
-    
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def update_account(account_id, otp_code:int, description=None, notes=None):
     """Updates the account details for the given account_id."""
@@ -169,13 +169,15 @@ def update_account(account_id, otp_code:int, description=None, notes=None):
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
-def new_transaction(account):
+def new_transaction(ammount, account_id, recipient_account_id, otp_code, description):
     """Creates a new transaction for the given account."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        params = {'account_id': account['account_id']}
-        response = requests.post(CONFIG["server"]["url"] + "/Transaction/History", cookies=session_data['session_cookie'], params=params)
+        if description == "":
+            description = None
+        params = {"account_id": account_id, "recipient_account_id": recipient_account_id, "amount": ammount, "description": description, "otp_code": otp_code}
+        response = requests.post(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params=params)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:

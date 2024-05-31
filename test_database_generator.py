@@ -44,7 +44,7 @@ def timestamp_this_century():
     return random_date(start, end).strftime("%Y-%m-%d %H:%M:%S")
 
 
-engine = create_engine('sqlite:///test_database.db')
+engine = create_engine('sqlite:///bank.db')
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()

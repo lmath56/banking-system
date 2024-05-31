@@ -12,49 +12,29 @@ import sys
 ### Functions ###
 #################
 
-if len(sys.argv) > 3:  # Check if the transaction description is provided as a command line argument
+if len(sys.argv) > 2:  # Check if the transaction ID and client ID are provided as command line arguments
     transaction_id = sys.argv[1]
-    transaction_description = sys.argv[3]
+    client_id = sys.argv[2]
 else:
-    messagebox.showerror("Error", "Transaction ID and description were not provided by the server.")
+    messagebox.showerror("Error", "Transaction ID and Client ID were not provided by the server.")
     sys.exit(1)
 
 def display_transaction_info(transaction_id):
     """Display the transaction information for the given transaction ID."""
-    response = get_transaction(transaction_id)  # Fetch the transaction details
-    print(response)
+    response = get_transaction(transaction_id)
     if response is None or 'data' not in response:
-        messagebox.showerror("Error", "Transaction details not found.")
+        messagebox.showerror("Error", "Could not fetch account details.")
         return
-
-    transaction = response.get('data', {})  # Get transaction data or empty dictionary
-    if not transaction:
-        messagebox.showerror("Error", "Transaction details not found.")
+    transaction = response.get('data',)
+    if "description" not in transaction:
+        messagebox.showerror("Error", "Transaction descroption not found.")
         return
-    global transaction_description
-    t_id = transaction['transaction_id']
-    t_description = transaction['description']
-    t_amount = format_balance(transaction['amount'])
-    t_timestamp = transaction['timestamp']
-    t_sender = transaction['account_id']
-    t_recipient = transaction['recipient_account_id']
-    t_type = transaction['transaction_type']
-
-    # Create labels for each piece of transaction information and pack them into the transaction_frame
-    id_label = customtkinter.CTkLabel(transaction_frame, text=f"Transaction ID: {t_id}")
-    id_label.pack()
-    description_label = customtkinter.CTkLabel(transaction_frame, text=f"Description: {t_description}")
-    description_label.pack()
-    amount_label = customtkinter.CTkLabel(transaction_frame, text=f"Amount: {t_amount}")
-    amount_label.pack()
-    timestamp_label = customtkinter.CTkLabel(transaction_frame, text=f"Timestamp: {t_timestamp}")
-    timestamp_label.pack()
-    sender_label = customtkinter.CTkLabel(transaction_frame, text=f"Sender: {t_sender}")
-    sender_label.pack()
-    recipient_label = customtkinter.CTkLabel(transaction_frame, text=f"Recipient: {t_recipient}")
-    recipient_label.pack()
-    type_label = customtkinter.CTkLabel(transaction_frame, text=f"Transaction Type: {t_type}")
-    type_label.pack()
+    fields = {'Description': transaction['description'], 'Transaction Type  ': transaction['transaction_type'], 'Amount': format_balance(transaction['amount']), 'Timestamp': transaction['timestamp'], 'Account ID': transaction['account_id'], 'Recipient ID': transaction['recipient_account_id'], "Transaction ID": transaction['transaction_id']}
+    for i, (key, value) in enumerate(fields.items()):
+        label = customtkinter.CTkLabel(transaction_frame, text=f"{key}:")
+        label.grid(row=i, column=0, sticky="w")
+        value_label = customtkinter.CTkLabel(transaction_frame, text=value)
+        value_label.grid(row=i, column=1, sticky="w")
 
 
 ##############
@@ -63,9 +43,9 @@ def display_transaction_info(transaction_id):
 
 # Initialise the main window
 root = customtkinter.CTk()
-root.title(f"Transactions: {transaction_description}")
+root.title("Banking System Transaction Page")
 root.iconbitmap("application/luxbank.ico")
-root.geometry("800x400")
+root.geometry("370x300")
 
 # Create a close button at the top of the window
 close_button = customtkinter.CTkButton(root, text="Close", command=root.destroy)
@@ -77,13 +57,13 @@ else:
     customtkinter.set_appearance_mode("light")  # Set the style for light mode
 
 # Display main window title
-welcome_label = customtkinter.CTkLabel(root, text=f"Transactions: {transaction_description}", font=("Helvetica", 24))
+welcome_label = customtkinter.CTkLabel(root, text="Transaction Details", font=("Helvetica", 24))
 welcome_label.pack(pady=10)
 
 # Create a frame for the transaction details
 transaction_frame = customtkinter.CTkFrame(root)
 transaction_frame.pack(pady=10)
-display_transaction_info(transaction_id)
 
+display_transaction_info(transaction_id)
 
 root.mainloop()
