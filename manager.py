@@ -162,7 +162,7 @@ def generate_otp(client_id: str):
             otps[client_id] = (password, time.time())  # Store the OTP and the current time
             return format_response(True, "OTP generated and sent successfully."), 200
         except EmailSendingError as e:
-            print(f"Error sending email: {e}")
+            log_event(f"Error sending email: {str(e)}")
             error_message = "Error sending email. Please try again later."
             if e.original_error:
                 error_message += f" Original error: {str(e.original_error)}"
@@ -251,6 +251,8 @@ def get_accounts(client_id: str):
 
 @login_required
 def get_account(account_id:str):
+    """Returns a specific account in the database. If the account is not found, returns an error message."""
+    print(account_id)
     current_client_id, is_admin = get_current_client()
     account_owner = session.query(Account).filter_by(account_id=account_id).one_or_none().client_id
     if not is_admin and account_owner != current_client_id:

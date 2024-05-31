@@ -8,16 +8,11 @@ import os
 from config import CONFIG
 from connection import logout_client, get_client, update_client, get_accounts, format_balance, generate_otp, change_password, new_transaction
 
-
-# Global variables
 email_entry = None
 phone_entry = None
 address_entry = None
 otp_entry = None
 frame = None
-
-fields = [('Name', 'name'), ('Client ID', 'client_id'), ('Email', 'email'), ('Phone', 'phone_number'),
-          ('Address', 'address'), ('Account Opened', 'opening_timestamp')]
 
 #################
 ### Functions ###
@@ -58,7 +53,6 @@ def display_client_info():
     else:
         frame = customtkinter.CTkFrame(root)
         frame.grid(row=1, column=0, padx=20, pady=20)
-
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
@@ -66,6 +60,8 @@ def display_client_info():
         client_info = get_client(client_id)
         if client_info.get('success'):
             client = client_info['data']
+            fields = [('Name', 'name'), ('Client ID', 'client_id'), ('Email', 'email'), ('Phone', 'phone_number'),
+                      ('Address', 'address'), ('Account Opened', 'opening_timestamp')]
             for i, (display_name, key) in enumerate(fields):
                 value = client.get(key, 'N/A')
                 label_key = customtkinter.CTkLabel(frame, text=f"{display_name}: ", font=("Helvetica", 14))
@@ -123,18 +119,14 @@ def save_details():
     new_phone = phone_entry.get() if phone_entry.get() != '' else None
     new_address = address_entry.get() if address_entry.get() != '' else None
     otp_code = otp_entry.get()
-
     if not otp_code:
         messagebox.showerror("Error", "OTP code must be entered.")
         return
-
     with open('application\\session_data.json', 'r') as f:
         session_data = json.load(f)
     client_id = session_data['client_id']
-
     if not messagebox.askyesno("Confirmation", "Are you sure you want to update the details?"):
         return
-
     try:
         result = update_client(client_id, otp_code, new_email, new_phone, new_address)
         if result['success']:
@@ -161,7 +153,6 @@ def populate_table():
         accounts = response.get('data', [])
         if not isinstance(accounts, list):
             raise ValueError(f"Expected a list of accounts, but got {type(accounts)}")
-
         for account in accounts:
             formatted_balance = format_balance(account['balance'])
             table.insert('', 'end', values=(account['description'], account['account_id'], formatted_balance, account['account_type']))
@@ -233,26 +224,20 @@ def change_password_save():
     new_password = password_entry.get()
     confirm_password = confirm_password_entry.get()
     otp_code = otp_entry.get()
-
     if not otp_code:
         messagebox.showerror("Error", "OTP code must be entered.")
         return
-
     if not new_password or not confirm_password:
         messagebox.showerror("Error", "New password and confirm password must be entered.")
         return
-
     if new_password != confirm_password:
         messagebox.showerror("Error", "New password and confirm password do not match.")
         return
-
     with open('application\\session_data.json', 'r') as f:
         session_data = json.load(f)
     client_id = session_data['client_id']
-
     if not messagebox.askyesno("Confirmation", "Are you sure you want to change the password?"):
         return
-
     try:
         response = change_password(client_id, old_password, new_password, otp_code)
         if response['success']:
@@ -262,6 +247,17 @@ def change_password_save():
             messagebox.showerror("Error", f"Could not change password: {response['message']}")
     except Exception as e:
         messagebox.showerror("Error", f"Could not change password: {str(e)}")
+
+def open_transaction_window():
+    """Opens a new window for creating a new transaction."""
+    try:
+        session = json.load(open('application\\session_data.json', 'r'))
+        command = f"python application\\new_transaction.py {session['client_id']}"                     
+        return_code = os.system(command)
+        if return_code != 0:
+            print(f"Error: The command failed with return code {return_code}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 ##############
 ### Layout ###
@@ -288,7 +284,7 @@ otp_button = customtkinter.CTkButton(button_frame, text="Get OTP Code", command=
 otp_button.grid(row=0, column=0, padx=3)
 
 # Create the new transaction button
-transaction_button = customtkinter.CTkButton(button_frame, text="New Transaction", command=new_transaction, width=100)
+transaction_button = customtkinter.CTkButton(button_frame, text="New Transaction", command=open_transaction_window, width=100)
 transaction_button.grid(row=0, column=1, padx=3)
 
 # Create the edit client Details button

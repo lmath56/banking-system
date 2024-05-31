@@ -4,6 +4,7 @@
 import tkinter as tk
 import sys
 import os
+import json
 import customtkinter
 from tkinter import ttk, messagebox
 from config import CONFIG
@@ -152,7 +153,16 @@ def save_details():
     except Exception as e:
         messagebox.showerror("Error", f"Could not update account details: {str(e)}")
 
-
+def open_transaction_window():
+    """Opens a new window for creating a new transaction."""
+    try:
+        session = json.load(open('application\\session_data.json', 'r'))
+        command = f"python application\\new_transaction.py {session['client_id']}"                     
+        return_code = os.system(command)
+        if return_code != 0:
+            print(f"Error: The command failed with return code {return_code}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 ##############
 ### Layout ###
