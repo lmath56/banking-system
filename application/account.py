@@ -21,7 +21,7 @@ notes_text = None
 
 if len(sys.argv) > 3:  # Check if the account description is provided as a command line argument
     account_id = sys.argv[1]
-    account_description = sys.argv[3] # This is passed so that the window can be titled appopriately
+    account_description = sys.argv[3] # This is passed so that the window can be titled appropriately
 else:
     messagebox.showerror("Error", "Account ID and description were not provided by the server.")
     sys.exit(1)
@@ -66,7 +66,11 @@ def display_account_info(account_id):
         label_value = customtkinter.CTkLabel(info_frame, text=value, font=("Helvetica", 14))
         label_key.grid(row=0, column=i*2, sticky='w', padx=10)
         label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
-    global notes_text
+    notes = get_account(account_id).get('data', {}).get('notes', '')
+    
+    print(f"Account: {account}")  # Debugging
+    print(f"Account: {notes}")  # Debugging
+    
     notes_text.configure(text=account.get('notes', ''))
 
 def on_transaction_double_click(event):
@@ -183,11 +187,15 @@ else:
 welcome_label = customtkinter.CTkLabel(root, text=f"Transactions for: {account_description}", font=("Helvetica", 24))
 welcome_label.pack(pady=10)
 
+# Display account information
+info_frame = customtkinter.CTkFrame(root)
+info_frame.pack(fill=tk.X)
+
 # Create the notes label and text box
-notes_label = customtkinter.CTkLabel(root, text="Notes:", font=("Helvetica", 14))
-notes_label.pack(pady=10)
-notes_text = customtkinter.CTkLabel(root, height=4, width=50, wraplength=400)  # Use CTkLabel instead of CTkTextbox
-notes_text.pack(pady=10, fill=tk.BOTH, expand=True)  # Add fill and expand options
+notes_label = customtkinter.CTkLabel(info_frame, text="Notes:", font=("Helvetica", 14))
+notes_label.grid(row=1, column=0, padx=10, pady=5, sticky='w')
+notes_text = customtkinter.CTkLabel(info_frame, height=4, width=50, wraplength=400)  # Use CTkLabel instead of CTkTextbox
+notes_text.grid(row=1, column=1, padx=10, pady=5, sticky='ew')  # Add fill and expand options
 
 # Display account information
 info_frame = customtkinter.CTkFrame(root)

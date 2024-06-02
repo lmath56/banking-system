@@ -863,6 +863,8 @@ components:
         balance:
           type: integer
           format: float
+        notes:
+          type: string
       example:
         account_id: "63b6e8e8"
         client_id:  "896d4ed8"
@@ -870,6 +872,7 @@ components:
         opening_timestamp: "17-04-2022 16:21:12"
         account_type: Savings Account"
         balance: 2314.23
+        notes: "This account is for savings"
     Transaction:
       type: object
       properties:

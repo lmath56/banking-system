@@ -160,6 +160,8 @@ def generate_otp(client_id: str):
         try:
             send_email(email, "Luxbank One Time Password", f"Your one-time password is: {password}")
             otps[client_id] = (password, time.time())  # Store the OTP and the current time
+            log_event(f"OTP Code {password} emailed to {email}")
+            print(f"OTP Code {password} emailed to {email}")
             return format_response(True, "OTP generated and sent successfully."), 200
         except EmailSendingError as e:
             log_event(f"Error sending email: {str(e)}")
@@ -252,7 +254,6 @@ def get_accounts(client_id: str):
 @login_required
 def get_account(account_id:str):
     """Returns a specific account in the database. If the account is not found, returns an error message."""
-    print(account_id)
     current_client_id, is_admin = get_current_client()
     account_owner = session.query(Account).filter_by(account_id=account_id).one_or_none().client_id
     if not is_admin and account_owner != current_client_id:
@@ -260,6 +261,7 @@ def get_account(account_id:str):
     account = session.query(Account).filter_by(account_id=account_id).one_or_none()
     for account in session.query(Account).all():
         if account.account_id == account_id:
+            print(account.to_dict())
             return format_response(True, "", account.to_dict()), 200
     return format_response(False, "Account not found."), 404
 

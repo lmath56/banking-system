@@ -39,4 +39,5 @@ class Account(Base):
             "open_timestamp": self.open_timestamp,
             "account_type": self.account_type,
             "balance": self.balance,
+            "notes": self.notes
         }
