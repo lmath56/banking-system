@@ -24,54 +24,63 @@ else:
 
 def submit_transaction():
     """Submit a new transaction to the server."""
-    global account_id, recipient_id
     account_id = account_combobox.get()
-    recipient_id = recipient_text.get()
-    amount = amount_text.get() if amount_text.get() != "" else None
-    description = description_text.get() if description_text.get() != "" else None
-    if not description or not amount or not recipient_id or not account_id:
+    recipient_id = recipient_text.get("1.0", "end-1c")
+    amount = amount_text.get("1.0", "end-1c")
+    description = description_text.get("1.0", "end-1c")
+
+    if not amount or not recipient_id or not account_id:
         messagebox.showerror("Error", "Please fill in all fields.")
         return
-    account_verification = verify_accounts(account_id, recipient_id)
+
+    # Convert amount to float
+    try:
+        amount = float(amount)
+    except ValueError:
+        messagebox.showerror("Error", "Invalid amount entered.")
+        return
+
+    account_verification = verify_accounts()
     if account_verification is False:
         messagebox.showerror("Error", "Could not verify account IDs.")
         return
+
     response = new_transaction(account_id, description, amount, recipient_id)
     if response is None or "data" not in response:
         messagebox.showerror("Error", "Could not submit transaction.")
         return
+
     transaction_id = response["data"]
     otp = generate_otp(account_id, transaction_id)
     if otp is None or "data" not in otp:
         messagebox.showerror("Error", "Could not generate OTP.")
         return
+
     messagebox.showinfo("Success", f"Transaction submitted successfully. OTP: {otp['data']}")
 
 def verify_accounts():
     """Verify that the account IDs are valid."""
     try:
+        account_id = account_combobox.get()
+        recipient_id = recipient_text.get("1.0", "end-1c")
         account = get_account(account_id)
-        recipient_account = get_account(recipient_id)
-        print(account)
-        print(recipient_account)
+        recipient_id = get_account(recipient_id)
     except requests.exceptions.RequestException as e:
         messagebox.showerror("Error", f"Failed to get account details: {e}")
         return False
-
-    if account is None or recipient_account is None or "data" not in account or "data" not in recipient_account:
+    if account is None or recipient_id is None or "data" not in account or "data" not in recipient_id:
         messagebox.showerror("Error", "Server did not return the expected response.")
         return False
     if "account_id" not in account["data"]:
         messagebox.showerror("Error", "Account ID not found.")
         return False
-    if "account_id" not in recipient_account["data"]:
+    if "account_id" not in recipient_id["data"]:
         messagebox.showerror("Error", "Recipient Account ID not found.")
         return False
-    #check balance
-    if account["data"]["balance"] < float(amount_text.get("1.0", "end-1c")):
+    amount = amount_text.get("1.0", "end-1c")
+    if account["data"]["balance"] < amount: # Check the client has the required balance
         messagebox.showerror("Error", "Insufficient funds.")
         return False
-    submit_button.configure(state=tk.NORMAL)  # Enable the submit button if the accounts are valid
     messagebox.showinfo("Success", "Accounts verified successfully.")
     return True
 
@@ -107,21 +116,22 @@ welcome_label.pack(pady=20)
 close_button = customtkinter.CTkButton(root, text="Cancel and Close", command=root.destroy)
 close_button.pack(side="top", anchor="e", padx=10, pady=10)
 
-# Create the account ID label and combobox
-account_label = customtkinter.CTkLabel(root, text="Account ID:", font=("Helvetica", 14))
+# Create a frame for the account ID combobox
+account_label = customtkinter.CTkLabel(root, text="From Account ID:", font=("Helvetica", 14))
 account_label.pack(pady=5)
-account_combobox = ttk.Combobox(root, height=1, width=250)
-account_combobox.pack(pady=5)
+account_frame = ttk.Frame(root, width=200, height=25)
+account_frame.pack_propagate(0)  # Don't shrink
+account_frame.pack(pady=5)
+
+# Create the account ID combobox inside the frame
+account_combobox = ttk.Combobox(account_frame, height=1)
+account_combobox.pack(fill='both', expand=True)
 
 # Create the recipient ID label and text box
-recipient_label = customtkinter.CTkLabel(root, text="Recipient ID:", font=("Helvetica", 14))
+recipient_label = customtkinter.CTkLabel(root, text="To Recipient ID:", font=("Helvetica", 14))
 recipient_label.pack(pady=5)
 recipient_text = customtkinter.CTkTextbox(root, height=2, width=250)
 recipient_text.pack(pady=5)
-
-# Create the verify buttons
-verify_button = customtkinter.CTkButton(root, text="Verify Accounts", command=verify_accounts)
-verify_button.pack(pady=10)
 
 # Create the transaction description label and text box
 description_label = customtkinter.CTkLabel(root, text="Description:", font=("Helvetica", 14))
@@ -146,7 +156,7 @@ otp_text = customtkinter.CTkTextbox(root, height=2, width=250)
 otp_text.pack(pady=5)
 
 # Create the submit button
-submit_button = customtkinter.CTkButton(root, text="Submit", command=submit_transaction, state=tk.DISABLED)
+submit_button = customtkinter.CTkButton(root, text="Submit", command=submit_transaction)
 submit_button.pack(pady=5)
 
 # Populate accounts combobox with the given client_id

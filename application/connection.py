@@ -117,7 +117,6 @@ def get_transactions(account_id):
 
 def get_account(account_id):
     """Retrieves the account details for the given account_id."""
-    print(f"Getting account details for account_id: {account_id}")
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)

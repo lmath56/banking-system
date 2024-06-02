@@ -66,11 +66,6 @@ def display_account_info(account_id):
         label_value = customtkinter.CTkLabel(info_frame, text=value, font=("Helvetica", 14))
         label_key.grid(row=0, column=i*2, sticky='w', padx=10)
         label_value.grid(row=0, column=i*2+1, sticky='w', padx=10)
-    notes = get_account(account_id).get('data', {}).get('notes', '')
-    
-    print(f"Account: {account}")  # Debugging
-    print(f"Account: {notes}")  # Debugging
-    
     notes_text.configure(text=account.get('notes', ''))
 
 def on_transaction_double_click(event):

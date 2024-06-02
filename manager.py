@@ -261,7 +261,6 @@ def get_account(account_id:str):
     account = session.query(Account).filter_by(account_id=account_id).one_or_none()
     for account in session.query(Account).all():
         if account.account_id == account_id:
-            print(account.to_dict())
             return format_response(True, "", account.to_dict()), 200
     return format_response(False, "Account not found."), 404
 
