@@ -416,7 +416,7 @@ paths:
           description: Amount of transaction
           required: true
           schema:
-            type: integer
+            type: number
             format: float
         - name: account_id
           in: query
@@ -430,12 +430,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: description
-          in: query
-          description: Description of transaction
-          required: false
-          schema:
-            type: string
         - name: otp_code
           in: query
           description: OTP to verify
@@ -443,6 +437,12 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: description
+          in: query
+          description: Description of transaction
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successful operation

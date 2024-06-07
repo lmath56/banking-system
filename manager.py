@@ -228,7 +228,7 @@ def change_password():
         if client.hash == hash_old_password:
             client.hash = hash_new_password
             session.commit()
-            delete_otp(client_id)
+            delete_otp(current_client_id)
             log_event(f"Password for client_id {client_id} has been updated by {current_client_id}.")
             return format_response(True, f"Password for client_id {client_id} has been updated."), 200
         else:
@@ -252,17 +252,17 @@ def get_accounts(client_id: str):
 ###############
 
 @login_required
-def get_account(account_id:str):
+def get_account(account_id: str):
     """Returns a specific account in the database. If the account is not found, returns an error message."""
     current_client_id, is_admin = get_current_client()
-    account_owner = session.query(Account).filter_by(account_id=account_id).one_or_none().client_id
+    account = session.query(Account).filter_by(account_id=account_id).one_or_none()
+    if account is None:
+        return format_response(False, "Account not found."), 404
+    account_owner = account.client_id
     if not is_admin and account_owner != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
-    account = session.query(Account).filter_by(account_id=account_id).one_or_none()
-    for account in session.query(Account).all():
-        if account.account_id == account_id:
-            return format_response(True, "", account.to_dict()), 200
-    return format_response(False, "Account not found."), 404
+    return format_response(True, "", account.to_dict()), 200
+
 
 @login_required
 def add_account(client_id:str, description:str, account_type:str, **kwargs):
@@ -285,34 +285,47 @@ def add_account(client_id:str, description:str, account_type:str, **kwargs):
     return format_response(True, f"New account has been added: account_id: {account_id}"), 200
 
 @login_required       
-def update_account(account_id:str, otp_code:str, **kwargs):
+def update_account(account_id: str, otp_code: str, **kwargs):
     """Updates an account in the database. If the account is not found, returns an error message."""
     current_client_id, is_admin = get_current_client()
+
+    # Verify OTP
     if not verify_otp(current_client_id, otp_code):
         return format_response(False, "Invalid OTP."), 400
-    account_owner = session.query(Account).filter_by(account_id=account_id).one_or_none().client_id
+
+    # Query the account once
+    account = session.query(Account).filter_by(account_id=account_id).one_or_none()
+    if account is None:
+        return format_response(False, "Account not found."), 404
+
+    account_owner = account.client_id
+
+    # Check permissions
     if not is_admin and account_owner != current_client_id:
-        return format_response(False, "You can only view your own client information."), 403    
-    for account in session.query(Account).all():
-        if account.account_id == account_id: 
-            description = kwargs.get("description", None)
-            account_type = kwargs.get("account_type", None)
-            balance = kwargs.get("balance", None)
-            enabled = kwargs.get("enabled", None)
-            notes = kwargs.get("notes", None)
-            if description:
-                account.description = description
-            if account_type:
-                account.account_type = account_type
-            if balance:
-                account.balance = balance
-            if enabled:
-                account.enabled = enabled
-            if notes:
-                account.notes = notes
-            session.commit()
-            return format_response(True, f"account_id: {account_id} has been updated."), 200
-    return format_response(False, "Account not found."), 404
+        return format_response(False, "You can only update your own account information."), 403    
+
+    # Update the account with provided kwargs
+    description = kwargs.get("description")
+    account_type = kwargs.get("account_type")
+    balance = kwargs.get("balance")
+    enabled = kwargs.get("enabled")
+    notes = kwargs.get("notes")
+
+    if description is not None:
+        account.description = description
+    if account_type is not None:
+        account.account_type = account_type
+    if balance is not None:
+        account.balance = balance
+    if enabled is not None:
+        account.enabled = enabled
+    if notes is not None:
+        account.notes = notes
+
+    # Commit the changes
+    session.commit()
+    return format_response(True, f"account_id: {account_id} has been updated."), 200
+
 
 ###################
 ### Transaction ###
@@ -332,31 +345,37 @@ def get_transaction(transaction_id:int):
     return format_response(True, "", transaction.to_dict()), 200
 
 @login_required
-def add_transaction(amount:int, account_id, recipient_account_id, otp_code:int, **kwargs):
+def add_transaction(amount: float, account_id: str, recipient_account_id: str, otp_code: int, description: str):
     """Adds a new transaction to the database. If the account is not found, returns an error message."""
+    print(f"Adding transaction: amount: {amount}, account_id: {account_id}, recipient_account_id: {recipient_account_id}, otp_code: {otp_code}, description: {description}")
     current_client_id, is_admin = get_current_client()
     if not is_admin and account_id != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
-    otp_verified = verify_otp(current_client_id, otp_code) # Verify if the OTP is correct
+    otp_verified = verify_otp(current_client_id, otp_code)
     if not otp_verified:
         return format_response(False, "Invalid OTP."), 400
+    
     transaction_id = generate_uuid()
-    for account in session.query(Account).all():
-        if account.account_id == account_id:
-            account_from = account
-        if account.account_id == recipient_account_id:
-            account_dest = account
-    if account_from.balance < amount: # Check if account has enough funds
+    account_from = session.query(Account).filter_by(account_id=account_id).one_or_none()
+    account_dest = session.query(Account).filter_by(account_id=recipient_account_id).one_or_none()
+
+
+    if account_from is None or account_dest is None:
+        return format_response(False, "Account not found."), 404
+    if account_from.balance < amount:
         return format_response(False, "Insufficient funds."), 400
-    account_from.balance -= amount # Perform the transaction
+    delete_otp(current_client_id)
+    # Perform the transaction
+    account_from.balance -= amount
     account_dest.balance += amount
     transaction_type = "transfer"
     session.commit()
-    description = kwargs.get("description", None) # Create the transaction record
+    # Create the transaction record
     new_transaction = Transaction(transaction_id, transaction_type, amount, timestamp(), description, account_id, recipient_account_id)
     session.add(new_transaction)
     session.commit()
-    return format_response(True, f"New transaction has been added: transaction_id: {transaction_id}"), 200 
+    
+    return format_response(True, f"New transaction has been added: transaction_id: {transaction_id}"), 200
 
 @login_required
 def transaction_history(account_id:int):

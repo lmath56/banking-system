@@ -24,64 +24,64 @@ else:
 
 def submit_transaction():
     """Submit a new transaction to the server."""
-    account_id = account_combobox.get()
-    recipient_id = recipient_text.get("1.0", "end-1c")
-    amount = amount_text.get("1.0", "end-1c")
-    description = description_text.get("1.0", "end-1c")
-
-    if not amount or not recipient_id or not account_id:
-        messagebox.showerror("Error", "Please fill in all fields.")
+    amount = amount_text.get("1.0", "end").strip()
+    account_id = account_combobox.get().strip()
+    recipient_id = recipient_text.get("1.0", "end").strip()
+    description = description_text.get("1.0", "end").strip()
+    otp_code:int = otp_text.get("1.0", "end").strip()
+    if not amount or not recipient_id or not account_id or not otp_code: 
+        messagebox.showerror("Error", "Please fill in manditory fields.")
         return
-
-    # Convert amount to float
-    try:
+    if verify_accounts(account_id, recipient_id, amount) is False:
+        return
+    if not otp_code.isdigit() or len(otp_code) != 6:
+        messagebox.showerror("Error", "Please enter a valid 6-digit OTP code.")
+        return    
+    try: # Convert amount to float
         amount = float(amount)
     except ValueError:
         messagebox.showerror("Error", "Invalid amount entered.")
         return
-
-    account_verification = verify_accounts()
-    if account_verification is False:
-        messagebox.showerror("Error", "Could not verify account IDs.")
+    try: # Convert otp code to int
+        otp_code = int(otp_code)
+    except ValueError:
+        messagebox.showerror("Error", "Invalid OTP code entered.")
         return
 
-    response = new_transaction(account_id, description, amount, recipient_id)
-    if response is None or "data" not in response:
+    response = new_transaction(account_id, description, amount, recipient_id, otp_code)
+    if response is None or "success" not in response:
         messagebox.showerror("Error", "Could not submit transaction.")
         return
 
-    transaction_id = response["data"]
-    otp = generate_otp(account_id, transaction_id)
-    if otp is None or "data" not in otp:
-        messagebox.showerror("Error", "Could not generate OTP.")
+    if not response['success']:  # Check if the transaction was unsuccessful
+        messagebox.showerror("Error", response['message'])  # Show the error message in a popup
         return
 
-    messagebox.showinfo("Success", f"Transaction submitted successfully. OTP: {otp['data']}")
+    if response['success']:  # Check if the transaction was successful
+        messagebox.showinfo("Success", "Transaction submitted successfully.")
+        root.destroy()  # Close the window
+        return
 
-def verify_accounts():
-    """Verify that the account IDs are valid."""
-    try:
-        account_id = account_combobox.get()
-        recipient_id = recipient_text.get("1.0", "end-1c")
-        account = get_account(account_id)
-        recipient_id = get_account(recipient_id)
-    except requests.exceptions.RequestException as e:
-        messagebox.showerror("Error", f"Failed to get account details: {e}")
+
+def verify_accounts(account_id, recipient_id, amount):
+    """Verify that both account IDs are valid, and the from account has enough balance to make the transaction."""
+    account = get_account(account_id)
+    if account is None or "data" not in account or "balance" not in account["data"]:
+        messagebox.showerror("Error", "Invalid account ID.")
         return False
-    if account is None or recipient_id is None or "data" not in account or "data" not in recipient_id:
-        messagebox.showerror("Error", "Server did not return the expected response.")
+    recipient = get_account(recipient_id)
+    if recipient is None or "data" not in recipient:
+        messagebox.showerror("Error", "Invalid recipient ID.")
         return False
-    if "account_id" not in account["data"]:
-        messagebox.showerror("Error", "Account ID not found.")
+    try: # Convert amount to float
+        amount = float(amount)
+    except ValueError:
+        messagebox.showerror("Error", "Invalid amount entered.")
         return False
-    if "account_id" not in recipient_id["data"]:
-        messagebox.showerror("Error", "Recipient Account ID not found.")
-        return False
-    amount = amount_text.get("1.0", "end-1c")
-    if account["data"]["balance"] < amount: # Check the client has the required balance
-        messagebox.showerror("Error", "Insufficient funds.")
-        return False
-    messagebox.showinfo("Success", "Accounts verified successfully.")
+    account_balance = account["data"]["balance"]
+    if account_balance < amount:
+        messagebox.showerror("Error", "Insufficient balance.")
+        return False 
     return True
 
 def populate_accounts(client_id):
@@ -156,7 +156,7 @@ otp_text = customtkinter.CTkTextbox(root, height=2, width=250)
 otp_text.pack(pady=5)
 
 # Create the submit button
-submit_button = customtkinter.CTkButton(root, text="Submit", command=submit_transaction)
+submit_button = customtkinter.CTkButton(root, text="Verify & Submit", command=submit_transaction)
 submit_button.pack(pady=5)
 
 # Populate accounts combobox with the given client_id

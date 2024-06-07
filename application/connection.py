@@ -169,20 +169,38 @@ def update_account(account_id, otp_code:int, description=None, notes=None):
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
-def new_transaction(ammount, account_id, recipient_account_id, otp_code, description):
+def new_transaction(account_id, description, amount, recipient_account_id, otp_code):
     """Creates a new transaction for the given account."""
     try:
         with open('application\\session_data.json', 'r') as f:
             session_data = json.load(f)
-        if description == "":
-            description = None
-        params = {"account_id": account_id, "recipient_account_id": recipient_account_id, "amount": ammount, "description": description, "otp_code": otp_code}
+        # Prepare the query parameters
+        params = {
+            "amount": amount,
+            "account_id": account_id,
+            "recipient_account_id": recipient_account_id,
+            "otp_code": otp_code,
+            "description": description}
+        print(f"Params: {params}")
         response = requests.post(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params=params)
         response.raise_for_status()
+        print(f"Response: {response.json()}")
         return response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            return {'success': False, 'message': 'Account not found.'}
+        elif e.response.status_code == 403:
+            return {'success': False, 'message': 'Invalid OTP code.'}
+        elif e.response.status_code == 400:
+            return {'success': False, 'message': 'Invalid request. Please check the OTP code and other details.'}
+        else:
+            print(f"HTTPError: {e}")
+            return {'success': False, 'message': f"Unexpected error occurred. Error: {e}"}
+
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
-        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+        return {'success': False, 'message': f"Could not connect to the server. Error: {e}"}
+
 
 def generate_otp():
     """Generates a new OTP for the current client, which is sent by Email."""
