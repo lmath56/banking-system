@@ -5,7 +5,7 @@ ADMIN_EMAIL = "lmath56@hotmail.com"
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from class_base import Base
+from server.class_base import Base
 from class_account import Account
 from class_client import Client
 from class_transaction import Transaction

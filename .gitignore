@@ -1,9 +1,8 @@
+# Bank Management System files
 flask_session/
-application/__pycache__/
-application/session_data.json
-server/bank.db
-server/test_database.db
-server/log.txt
+session_data.json
+bank.db
+log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
