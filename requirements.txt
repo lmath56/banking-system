@@ -1,8 +1,0 @@
-flask
-connexion[swagger-ui]==2.14.2
-requests
-sqlalchemy
-flask-session
-faker
-customtkinter
-schedule

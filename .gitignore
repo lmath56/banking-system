@@ -1,9 +1,9 @@
 flask_session/
 application/__pycache__/
 application/session_data.json
-bank.db
-test_database.db
-log.txt
+server/bank.db
+server/test_database.db
+server/log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
