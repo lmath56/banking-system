@@ -1,6 +1,7 @@
 # Bank Management System files
 flask_session/
 session_data.json
+session_cookie.json
 bank.db
 log.txt
 
