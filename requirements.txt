@@ -6,3 +6,4 @@ flask-session
 faker
 customtkinter
 schedule
+psycopg2

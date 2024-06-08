@@ -20,7 +20,7 @@ from manager import log_event # Imports the log_event function from the manager 
 def create_app():
     """Creates the API using Connexion."""
     app = connexion.FlaskApp(__name__)
-    app.add_api(CONFIG["api_file"]["name"])
+    app.add_api(CONFIG["server"]["api_file"])
 
     flask_app = app.app
     flask_app.config['SECRET_KEY'] = CONFIG["sessions"]["secret_key"]
@@ -34,7 +34,7 @@ def API():
     app = create_app()
     debug_value = CONFIG["server"]["debug"]
     debug = False if debug_value.lower() == 'false' else True
-    app.run(host=CONFIG["server"]["listen_ip"], port=CONFIG["server"]["port"], debug=debug)
+    app.run(host=CONFIG["server"]["url"], debug=debug)
 
 ################
 ### Run Code ###

@@ -1,22 +1,14 @@
 # Lucas Mathews - Fontys Student ID: 5023572
 # Banking System Manager File
 
-import os.path
-
+from config import CONFIG # Import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import CONFIG # Import Config
+db_url : str = f"{CONFIG['database']['type']}://{CONFIG['database']['user']}:{CONFIG['database']['password']}@{CONFIG['database']['ip']}:{CONFIG['database']['port']}/{CONFIG['database']['name']}"
+print(f"Database URL set to: {db_url}")    
 
-if os.path.exists(CONFIG["database"]["name"]): # Check if the database exists
-    print(f"Database {CONFIG["database"]["name"]} already exists.")
-else:
-    print(f"Database {CONFIG["database"]["name"]} does not exist. Creating it now.")   
-
-db_url : str = "sqlite:///" + CONFIG["database"]["name"] # Sets the database file to be used from the configuration file
-print(f"Database file set to: {db_url}")    
-
-engine = create_engine(db_url, echo=True) # Creates the database engine (does not create the database file if it already exists)
+engine = create_engine(db_url, echo=True) # Creates the database engine
 
 from class_base import Base # Imports the base class required by SQLAlchemy
 
