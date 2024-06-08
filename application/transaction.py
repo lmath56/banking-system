@@ -44,7 +44,7 @@ def display_transaction_info(transaction_id):
 # Initialise the main window
 root = customtkinter.CTk()
 root.title("Banking System Transaction Page")
-root.iconbitmap("application/luxbank.ico")
+root.iconbitmap("luxbank.ico")
 root.geometry("370x300")
 
 # Create a close button at the top of the window

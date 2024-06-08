@@ -38,7 +38,7 @@ def authenticate_client(client_id, client_hash):
 def logout_client():
     """Logs out the current client."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.post(CONFIG["server"]["url"] + "/Client/Logout", cookies=session_data['session_cookie'])
         return response
@@ -52,7 +52,7 @@ def logout_client():
 def get_client(client_id):
     """Retrieves the client details for the given client_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.get(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params={'client_id': client_id})
         response.raise_for_status()
@@ -64,7 +64,7 @@ def get_client(client_id):
 def update_client(client_id, otp_code, email=None, phone_number=None, address=None):
     """Updates the client details for the given client_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         params = {'client_id': client_id, 'otp_code': otp_code}
         if email is not None:
@@ -88,7 +88,7 @@ def update_client(client_id, otp_code, email=None, phone_number=None, address=No
 def get_accounts(client_id):
     """Retrieves the accounts associated with the given client_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.get(CONFIG["server"]["url"] + "/Client/Accounts", cookies=session_data['session_cookie'], params={'client_id': client_id})
         response.raise_for_status()
@@ -103,7 +103,7 @@ def get_accounts(client_id):
 def get_transactions(account_id):
     """Retrieves the transactions for the given account_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.get(CONFIG["server"]["url"] + "/Transaction/History", cookies=session_data['session_cookie'], params={'account_id': account_id})
         response.raise_for_status()
@@ -118,7 +118,7 @@ def get_transactions(account_id):
 def get_account(account_id):
     """Retrieves the account details for the given account_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.get(CONFIG["server"]["url"] + "/Account", cookies=session_data['session_cookie'], params={'account_id': account_id})
         response.raise_for_status()
@@ -134,7 +134,7 @@ def get_account(account_id):
 def get_transaction(transaction_id):
     """Retrieves the transaction details for the given transaction_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         response = requests.get(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params={'transaction_id': transaction_id})
         response.raise_for_status()
@@ -150,7 +150,7 @@ def get_transaction(transaction_id):
 def update_account(account_id, otp_code:int, description=None, notes=None):
     """Updates the account details for the given account_id."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         params = {'account_id': account_id, 'otp_code': otp_code}
         if description is not None:
@@ -172,7 +172,7 @@ def update_account(account_id, otp_code:int, description=None, notes=None):
 def new_transaction(account_id, description, amount, recipient_account_id, otp_code):
     """Creates a new transaction for the given account."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         # Prepare the query parameters
         params = {
@@ -205,7 +205,7 @@ def new_transaction(account_id, description, amount, recipient_account_id, otp_c
 def generate_otp():
     """Generates a new OTP for the current client, which is sent by Email."""
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         client_id = session_data['client_id']
         response = requests.post(f"{CONFIG['server']['url']}/OTP/Generate", cookies=session_data['session_cookie'], params={'client_id': client_id})
@@ -227,7 +227,7 @@ def change_password(client_id, old_password, new_password, otp_code):
         return {'success': False, 'message': "Invalid OTP code format: must be an integer."}
     
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         payload = { # Prepare the payload to be sent in the request body
             'client_id': client_id,

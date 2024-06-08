@@ -21,7 +21,7 @@ frame = None
 def go_to_login():
     """Closes the current window and opens the login page."""
     root.destroy()
-    os.system("python application/login.py")
+    os.system("python login.py")
 
 def logout():
     """Logs out the client and redirects to the login page."""
@@ -54,7 +54,7 @@ def display_client_info():
         frame = customtkinter.CTkFrame(root)
         frame.grid(row=1, column=0, padx=20, pady=20)
     try:
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         client_id = session_data['client_id']
         client_info = get_client(client_id)
@@ -79,7 +79,7 @@ def edit_details():
     global edit_window, email_entry, phone_entry, address_entry, otp_entry
     edit_window = customtkinter.CTkToplevel(root)
     edit_window.title("Edit Details")
-    edit_window.iconbitmap("application/luxbank.ico")
+    edit_window.iconbitmap("luxbank.ico")
     edit_window.geometry("300x330")
     edit_window.attributes('-topmost', True)
 
@@ -122,7 +122,7 @@ def save_details():
     if not otp_code:
         messagebox.showerror("Error", "OTP code must be entered.")
         return
-    with open('application\\session_data.json', 'r') as f:
+    with open('session_data.json', 'r') as f:
         session_data = json.load(f)
     client_id = session_data['client_id']
     if not messagebox.askyesno("Confirmation", "Are you sure you want to update the details?"):
@@ -146,7 +146,7 @@ def populate_table():
     for row in table.get_children(): # Clear the table before populating it
         table.delete(row)
     try: 
-        with open('application\\session_data.json', 'r') as f:
+        with open('session_data.json', 'r') as f:
             session_data = json.load(f)
         client_id = session_data['client_id']
         response = get_accounts(client_id)
@@ -163,9 +163,9 @@ def on_account_double_click(event):
     """Handles double-click event on an account in the table."""
     try:
         selected_account = table.item(table.selection())
-        session = json.load(open('application\\session_data.json', 'r'))
+        session = json.load(open('session_data.json', 'r'))
         account_description = selected_account['values'][0]
-        command = f"python application\\account.py {selected_account['values'][1]} {session['client_id']} \"{account_description}\""
+        command = f"python account.py {selected_account['values'][1]} {session['client_id']} \"{account_description}\""
         return_code = os.system(command)
         if return_code != 0:
             print(f"Error: The command failed with return code {return_code}")
@@ -182,7 +182,7 @@ def change_password_box():
     global edit_window,password_entry, old_password_entry, confirm_password_entry, otp_entry
     edit_window = customtkinter.CTkToplevel(root)
     edit_window.title("Change Password")
-    edit_window.iconbitmap("application/luxbank.ico")
+    edit_window.iconbitmap("luxbank.ico")
     edit_window.geometry("300x350")
     edit_window.attributes('-topmost', True)
 
@@ -233,7 +233,7 @@ def change_password_save():
     if new_password != confirm_password:
         messagebox.showerror("Error", "New password and confirm password do not match.")
         return
-    with open('application\\session_data.json', 'r') as f:
+    with open('session_data.json', 'r') as f:
         session_data = json.load(f)
     client_id = session_data['client_id']
     if not messagebox.askyesno("Confirmation", "Are you sure you want to change the password?"):
@@ -251,8 +251,8 @@ def change_password_save():
 def open_transaction_window():
     """Opens a new window for creating a new transaction."""
     try:
-        session = json.load(open('application\\session_data.json', 'r'))
-        command = f"python application\\new_transaction.py {session['client_id']}"                     
+        session = json.load(open('session_data.json', 'r'))
+        command = f"python new_transaction.py {session['client_id']}"                     
         return_code = os.system(command)
         if return_code != 0:
             print(f"Error: The command failed with return code {return_code}")
@@ -265,7 +265,7 @@ def open_transaction_window():
 
 root = customtkinter.CTk()
 root.title("Luxbank Dashboard")
-root.iconbitmap("application/luxbank.ico")
+root.iconbitmap("luxbank.ico")
 root.geometry("800x350")
 
 # Set appearance mode based on configuration

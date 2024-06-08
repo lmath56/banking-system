@@ -26,10 +26,10 @@ def login():
                 'session_cookie': response.cookies.get_dict(),
                 'client_id': client_id
             }
-            with open('application/session_data.json', 'w') as f:  # Save the session data to a file
+            with open('session_data.json', 'w') as f:  # Save the session data to a file
                 json.dump(session_data, f)
             root.destroy()
-            os.system("python application/dashboard.py")
+            os.system("python dashboard.py")
         elif response.status_code == 401:
                 messagebox.showerror("Login failed", "Invalid client ID or password.")
         else:
@@ -42,12 +42,12 @@ def login():
 def change_dark_theme():
     """Change the theme between dark and light."""
     config = configparser.ConfigParser()
-    config.read('application/app.ini')
+    config.read('app.ini')
     if 'preferences' in config:
         current_theme = config.get('preferences', 'dark_theme')
         new_theme = 'light' if current_theme == 'dark' else 'dark'
         config.set('preferences', 'dark_theme', new_theme)
-        with open('application/app.ini', 'w') as configfile:
+        with open('app.ini', 'w') as configfile:
             config.write(configfile)
         os.execl(sys.executable, sys.executable, *sys.argv)
     else:
@@ -69,7 +69,7 @@ else:
 # Initialize the main window
 root = customtkinter.CTk()
 root.title("Luxbank Login")
-root.iconbitmap("application/luxbank.ico")
+root.iconbitmap("luxbank.ico")
 root.geometry("400x300")
 
 # Create and pack the label for the title

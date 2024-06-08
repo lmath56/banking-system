@@ -4,4 +4,4 @@
 import configparser
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("application/app.ini")
+CONFIG.read("app.ini")

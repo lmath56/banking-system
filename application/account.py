@@ -73,7 +73,7 @@ def on_transaction_double_click(event):
     try:
         selected_transaction = transactions_table.item(transactions_table.selection()) 
         transaction_id = selected_transaction['values'][-1]
-        command = f"python application\\transaction.py {transaction_id} \"{selected_transaction['values'][4]}\""
+        command = f"python transaction.py {transaction_id} \"{selected_transaction['values'][4]}\""
         return_code = os.system(command)
         if return_code != 0:
             print(f"Error: The command failed with return code {return_code}")
@@ -82,7 +82,7 @@ def on_transaction_double_click(event):
 
 def add_transaction():
     """Open the add transaction dialog."""
-    command = f"python application\\new_transaction.py {account_id}"
+    command = f"python new_transaction.py {account_id}"
     return_code = os.system(command)
     if return_code != 0:
         print(f"Error: The command failed with return code {return_code}")
@@ -92,7 +92,7 @@ def edit_account_details():
     global edit_window, otp_entry, description_entry, notes_entry
     edit_window = customtkinter.CTkToplevel(root)
     edit_window.title("Edit Account Details")
-    edit_window.iconbitmap("application/luxbank.ico")
+    edit_window.iconbitmap("luxbank.ico")
     edit_window.geometry("300x350")
     edit_window.attributes('-topmost', True)
 
@@ -155,8 +155,8 @@ def save_details():
 def open_transaction_window():
     """Opens a new window for creating a new transaction."""
     try:
-        session = json.load(open('application\\session_data.json', 'r'))
-        command = f"python application\\new_transaction.py {session['client_id']}"                     
+        session = json.load(open('session_data.json', 'r'))
+        command = f"python new_transaction.py {session['client_id']}"                     
         return_code = os.system(command)
         if return_code != 0:
             print(f"Error: The command failed with return code {return_code}")
@@ -170,7 +170,7 @@ def open_transaction_window():
 # Initialise the main window
 root = customtkinter.CTk()
 root.title(f"Transactions for: {account_description}")
-root.iconbitmap("application/luxbank.ico")
+root.iconbitmap("luxbank.ico")
 root.geometry("800x450")
 
 if CONFIG["preferences"]["dark_theme"] == "dark":  # Check if dark mode is enabled

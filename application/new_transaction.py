@@ -100,7 +100,7 @@ def populate_accounts(client_id):
 # Initialise the main window
 root = customtkinter.CTk()
 root.title("New Transaction")
-root.iconbitmap("application/luxbank.ico")
+root.iconbitmap("luxbank.ico")
 root.geometry("400x600")
 
 if CONFIG["preferences"]["dark_theme"] == "dark":  # Check if dark mode is enabled
