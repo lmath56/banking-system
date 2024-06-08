@@ -4,6 +4,8 @@ session_data.json
 session_cookie.json
 bank.db
 log.txt
+bank.ini
+app.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
