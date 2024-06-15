@@ -40,7 +40,7 @@ def login():
     except requests.exceptions.HTTPError:
         messagebox.showerror("Login failed", "Invalid client ID or password.")
     except requests.exceptions.ConnectionError:
-        messagebox.showerror("Connection Error", "Could not connect to the server.")
+        messagebox.showerror("Connection Error", f"Could not connect to the server on {CONFIG['server']['url']}")
 
 def change_dark_theme():
     """Change the theme between dark and light."""

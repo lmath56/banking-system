@@ -7,7 +7,7 @@ info:
     email: 522499@student.fontys.nl
   version: 3.0.0
 servers:
-  - url: http://127.0.0.1:81
+  - url: /
 tags:
   - name: client
     description: Operations for Client Accounts

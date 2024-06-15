@@ -4,7 +4,7 @@
 import threading
 import schedule
 import time
-from manager import log_event
+from manager import event_logger
 
 stop_event = threading.Event()
 
@@ -18,7 +18,7 @@ def clean_otp():
     print("Cleaning OTPs...")
     from manager import clean_expired_otps
     removed_otps = clean_expired_otps()
-    log_event(f"Removed {removed_otps} expired OTPs.")
+    event_logger(f"Removed {removed_otps} expired OTPs.")
 
 schedule.every(300).seconds.do(clean_otp) 
 

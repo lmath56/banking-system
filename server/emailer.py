@@ -33,12 +33,12 @@ def send_email(receiver_email, subject, body):
         with smtplib.SMTP_SSL(CONFIG["smtp"]["host"], CONFIG["smtp"]["port"], context=context) as server:
             server.login(CONFIG["smtp"]["username"], CONFIG["smtp"]["password"])
             server.sendmail(sender_email, receiver_email, text)
-            from manager import log_event
-            log_event(f"Email '{subject}' sent to {receiver_email}") # Log the message
+            from manager import event_logger
+            event_logger(f"Email '{subject}' sent to {receiver_email}") # Log the message
     except Exception as e:
         error_message = f"Failed to send email to {receiver_email}: {e}"
-        from manager import log_event
-        log_event(error_message) # Log the error
+        from manager import event_logger
+        event_logger(error_message) # Log the error
         raise EmailSendingError(error_message)
 
 

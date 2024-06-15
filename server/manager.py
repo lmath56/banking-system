@@ -9,6 +9,7 @@ from flask import jsonify, session as flask_session  # Imports the Flask modules
 from functools import wraps # For decorators / user login
 from database import * # Importing the database connection
 from emailer import send_email # Importing the emailer function
+from logger import event_logger # Importing the event_logger function
 from flask import session as flask_session
 from flask import request
 from database import session
@@ -89,13 +90,7 @@ def clean_expired_otps():
     for client_id in expired_otps:
         delete_otp(client_id)
         otps_removed += 1
-    log_event(f"Cleaned {otps_removed} expired OTPs.")
-
-def log_event(data_to_log:str):
-    """Logs an event to the log file."""
-    with open("log.txt", "a") as log_file:
-        log_file.write(f"{timestamp()} - {data_to_log}\n")
-
+    event_logger(f"Cleaned {otps_removed} expired OTPs.")
 
 ######################
 ### Authentication ###
@@ -109,7 +104,7 @@ def login():
     client = session.query(Client).filter_by(client_id=client_id).first()
     if client and client.hash == client_hash:
         flask_session['client_id'] = client_id
-        log_event(f"{client_id} logged in successfully.")
+        event_logger(f"{client_id} logged in successfully.")
         return format_response(True, f"{flask_session['client_id']} logged in successfully."), 200
     return format_response(False, "Invalid client_id or password."), 401
 
@@ -163,11 +158,11 @@ def generate_otp(client_id: str):
         try:
             send_email(email, "Luxbank One Time Password", f"Your one-time password is: {password}")
             otps[client_id] = (password, time.time())  # Store the OTP and the current time
-            log_event(f"OTP Code {password} emailed to {email}")
+            event_logger(f"OTP Code {password} emailed to {email}")
             print(f"OTP Code {password} emailed to {email}")
             return format_response(True, "OTP generated and sent successfully."), 200
         except EmailSendingError as e:
-            log_event(f"Error sending email: {str(e)}")
+            event_logger(f"Error sending email: {str(e)}")
             error_message = "Error sending email. Please try again later."
             if e.original_error:
                 error_message += f" Original error: {str(e.original_error)}"
@@ -232,7 +227,7 @@ def change_password():
             client.hash = hash_new_password
             session.commit()
             delete_otp(current_client_id)
-            log_event(f"Password for client_id {client_id} has been updated by {current_client_id}.")
+            event_logger(f"Password for client_id {client_id} has been updated by {current_client_id}.")
             return format_response(True, f"Password for client_id {client_id} has been updated."), 200
         else:
             return format_response(False, "Invalid old password."), 400
@@ -406,7 +401,7 @@ def delete_client(client_id:str):
             if client.accounts == None:
                 session.delete(client)
                 session.commit()
-                log_event(f"Client ID: {client_id} has been removed by {flask_session['client_id']}.")
+                event_logger(f"Client ID: {client_id} has been removed by {flask_session['client_id']}.")
                 return format_response(True, f"client_id: {client_id} has been removed."), 200
             else:
                 return format_response(False, "Client has accounts and can not be removed."), 400
@@ -420,7 +415,7 @@ def delete_account(account_id:str):
             if account.balance == 0:
                 session.delete(account)
                 session.commit()
-                log_event(f"Account ID: {account_id} has been removed by {flask_session['client_id']}.")
+                event_logger(f"Account ID: {account_id} has been removed by {flask_session['client_id']}.")
                 return format_response(True, f"account_id: {account_id} has been removed."), 200
             else:
                 return format_response(False, "Account has a balance and can not be removed."), 400
@@ -430,21 +425,21 @@ def delete_account(account_id:str):
 def get_all_clients():
     """Returns all clients in the database."""
     clients = session.query(Client).all()
-    log_event(f"All clients have been retrieved by {flask_session['client_id']}.")
+    event_logger(f"All clients have been retrieved by {flask_session['client_id']}.")
     return format_response(True, "", [client.to_dict() for client in clients]), 200
 
 @admin_required
 def get_all_accounts():
     """Returns all accounts in the database."""
     accounts = session.query(Account).all()
-    log_event(f"All accounts have been retrieved by {flask_session['client_id']}.")
+    event_logger(f"All accounts have been retrieved by {flask_session['client_id']}.")
     return format_response(True, "", [account.to_dict() for account in accounts]), 200
 
 @admin_required
 def get_all_transactions():
     """Returns all transactions in the database."""
     transactions = session.query(Transaction).all()
-    log_event(f"All transactions have been retrieved by {flask_session['client_id']}.")
+    event_logger(f"All transactions have been retrieved by {flask_session['client_id']}.")
     return format_response(True, "", [transaction.to_dict() for transaction in transactions]), 200
 
 @admin_required
@@ -455,7 +450,7 @@ def apply_interest(account_id:int, interest_rate:float):
             interest = account.balance * interest_rate
             account.balance += interest
             session.commit()
-            log_event(f"Interest of €{interest} has been applied to Account ID: {account_id} by {flask_session['client_id']}.")
+            event_logger(f"Interest of €{interest} has been applied to Account ID: {account_id} by {flask_session['client_id']}.")
             return format_response(True, f"€{interest} in interest has been applied to Account ID: {account_id}."), 200
     return format_response(False, "Account not found."), 404
 
@@ -466,7 +461,7 @@ def apply_fee(account_id:int, fee:float):
         if account.account_id == account_id:
             account.balance -= fee
             session.commit()
-            log_event(f"Fee of €{fee} has been applied to Account ID: {account_id} by {flask_session['client_id']}.")
+            event_logger(f"Fee of €{fee} has been applied to Account ID: {account_id} by {flask_session['client_id']}.")
             return format_response(True, f"€{fee} in fees has been applied to Account ID: {account_id}."), 200
     return format_response(False, "Account not found."), 404
 
@@ -477,7 +472,7 @@ def delete_transaction(transaction_id:int):
         if transaction.transaction_id == transaction_id:
             session.delete(transaction)
             session.commit()
-            log_event(f"Transaction ID: {transaction_id} has been removed by {flask_session['client_id']}.")
+            event_logger(f"Transaction ID: {transaction_id} has been removed by {flask_session['client_id']}.")
             return format_response(True, f"Transaction ID: {transaction_id} has been removed."), 200
     return format_response(False, "Transaction not found."), 404
 
@@ -488,14 +483,14 @@ def modify_balance(transaction_id:int, amount:int):
         if transaction.transaction_id == transaction_id:
             transaction.amount = amount
             session.commit()
-            log_event(f"Transaction ID: {transaction_id} has been modified by {flask_session['client_id']}.")
+            event_logger(f"Transaction ID: {transaction_id} has been modified by {flask_session['client_id']}.")
             return format_response(True, f"Transaction ID: {transaction_id} has been modified."), 200
     return format_response(False, "Transaction not found."), 404
 
 @admin_required
 def test_account_balances():
     """Checks all account balances in the database and returns a list of discrepancies."""
-    log_event(f"Account balances have been checked by {flask_session['client_id']}.")
+    event_logger(f"Account balances have been checked by {flask_session['client_id']}.")
     all_transactions = session.query(Transaction).all()# Get all transactions from the database
     calculated_balances = {} # Initialize a dictionary to store the calculated balance for each account
     for transaction in all_transactions: # Go through each transaction
@@ -520,7 +515,7 @@ def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str
     new_client = Client(client_id, name, birthdate, timestamp(), address, phone_number, email, hash_password(password), notes, 1, 0, None)
     session.add(new_client)
     session.commit()
-    log_event(f"New client has been added: client_id: {client_id} by {flask_session['client_id']}.")
+    event_logger(f"New client has been added: client_id: {client_id} by {flask_session['client_id']}.")
     return format_response(True, f"New client has been added: client_id: {client_id}"), 200
 
 def initialise_database(password:str, email:str):
@@ -533,7 +528,7 @@ def initialise_database(password:str, email:str):
         admin_client = session.query(Client).filter_by(name='ADMIN').one() # Retrieve the administrator client
         admin_client.administrator = 1 # Set the new client as an administrator
         session.commit()
-        log_event(f"Database initialised with administrator account with client_id {admin_client.client_id}.")
+        event_logger(f"Database initialised with administrator account with client_id {admin_client.client_id}.")
         return format_response(True, f"Database initialised with administrator account with client_id {admin_client.client_id}"), 200
     return format_response(False, "Database not empty."), 400
 
@@ -544,7 +539,7 @@ def promote_to_admin(client_id:str):
         if client.client_id == client_id:
             client.administrator = 1
             session.commit()
-            log_event(f"Client ID: {client_id} has been promoted to administrator by {flask_session['client_id']}.")
+            event_logger(f"Client ID: {client_id} has been promoted to administrator by {flask_session['client_id']}.")
             return format_response(True, f"client_id: {client_id} has been promoted to administrator."), 200
     return format_response(False, f"client_id: {client_id} is not found."), 404
 
@@ -555,7 +550,7 @@ def demote_from_admin(client_id:str):
         if client.client_id == client_id:
             client.administrator = 0
             session.commit()
-            log_event(f"Client ID: {client_id} has been demoted from administrator by {flask_session['client_id']}.")
+            event_logger(f"Client ID: {client_id} has been demoted from administrator by {flask_session['client_id']}.")
             return format_response(True, f"client_id: {client_id} has been demoted from administrator."), 200
     return format_response(False, f"client_id: {client_id} is not found."), 404
 

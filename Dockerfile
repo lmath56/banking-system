@@ -1,16 +1,16 @@
 # Lucas Mathews - Fontys Student ID: 5023572
 # Banking System DockerFile
 
-FROM python:3.12.3
-
-LABEL maintainer="522499@student.fontys.nl"
+FROM python:3.12.3-slim as base
 
 WORKDIR /server
 
 COPY server/ /server/
-
-EXPOSE 80
+COPY requirements.txt /server/
 
 RUN pip install --no-cache-dir --upgrade -r /server/requirements.txt
 
-ENTRYPOINT ["python", "/server/api.py"]
+EXPOSE 8066
+
+ENTRYPOINT ["python"]
+CMD ["api.py"]
