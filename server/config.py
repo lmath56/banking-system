@@ -4,4 +4,4 @@
 import configparser
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("bank.ini")
+CONFIG.read("./bank.ini")

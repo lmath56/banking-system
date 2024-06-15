@@ -7,10 +7,10 @@ LABEL maintainer="522499@student.fontys.nl"
 
 WORKDIR /server
 
-COPY . /server
+COPY server/ /server/
 
-EXPOSE 81
+EXPOSE 80
 
-RUN pip install --no-cache-dir --upgrade -r /requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /server/requirements.txt
 
-ENTRYPOINT ["python", "./api.py", "--host", "0.0.0.0", "--port", "81"]
+ENTRYPOINT ["python", "/server/api.py"]

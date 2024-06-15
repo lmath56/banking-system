@@ -41,8 +41,7 @@ def API():
 ################
 
 if __name__ == "__main__":
-    # Create a thread that will run the run_schedule function in the background
-    log_event("Starting API...")
+    log_event("Starting API...") # Create a thread that will run the run_schedule function in the background
     scheduler = CONFIG["server"]["scheduler"]
     scheduler = False if scheduler.lower() == 'false' else True
     if scheduler:
