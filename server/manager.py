@@ -69,7 +69,7 @@ def get_current_client():
 
 def verify_otp(client_id:str, otp:int):
     """Verifies a one time password for a client. Returns True if the OTP is correct and False otherwise."""
-    if CONFIG["smtp"]["true"] == "False":
+    if CONFIG["smtp"]["enabled"] == "False":
         return True
     if client_id in otps:
         stored_otp, creation_time = otps[client_id]
@@ -147,7 +147,7 @@ def admin_required(f):
 @login_required
 def generate_otp(client_id: str):
     """Generates a one-time password for a client and sends it to their email address. Returns a success message if the OTP is generated and an error message otherwise."""
-    if CONFIG["smtp"]["true"] == "False":
+    if CONFIG["smtp"]["enabled"] == "False":
         return format_response(True, "OTP generation disabled as SMTP is not enabled."), 200
     current_client_id, is_admin = get_current_client()
     if not is_admin and client_id != current_client_id:

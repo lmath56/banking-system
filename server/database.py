@@ -44,4 +44,4 @@ finally:
     if 'session' in locals():
         session.close()  # Close the session when done
 
-event_logger("Database operations completed.")
+event_logger("Database initialised.")

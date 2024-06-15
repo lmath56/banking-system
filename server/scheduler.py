@@ -15,19 +15,15 @@ def run_schedule():
 
 def clean_otp():
     """Cleans the OTP table."""
+    event_logger("Starting to clean OTPs...")
     print("Cleaning OTPs...")
     from manager import clean_expired_otps
     removed_otps = clean_expired_otps()
     event_logger(f"Removed {removed_otps} expired OTPs.")
+    event_logger("Finished cleaning OTPs.")
 
 schedule.every(300).seconds.do(clean_otp) 
 
 thread = threading.Thread(target=run_schedule)
 thread.daemon = True  # Set the thread as a daemon thread
 thread.start()
-
-try:
-    while True:  # Keep the main program running
-        time.sleep(1)
-except KeyboardInterrupt:
-    stop_event.set()  # Signal the thread to stop
