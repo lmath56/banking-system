@@ -349,9 +349,10 @@ def add_transaction(amount: float, account_id: str, recipient_account_id: str, o
     current_client_id, is_admin = get_current_client()
     if not is_admin and account_id != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
-    otp_verified = verify_otp(current_client_id, otp_code)
-    if not otp_verified:
-        return format_response(False, "Invalid OTP."), 400
+    if not is_admin:
+        otp_verified = verify_otp(current_client_id, otp_code)
+        if not otp_verified:
+            return format_response(False, "Invalid OTP."), 400
     
     transaction_id = generate_uuid()
     account_from = session.query(Account).filter_by(account_id=account_id).one_or_none()

@@ -43,7 +43,6 @@ def logout_client():
         response = requests.post(CONFIG["server"]["url"] + "/Client/Logout", cookies=session_data['session_cookie'])
         return response
     except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
         response = Response()
         response.status_code = 500
         response._content = b'{"success": false, "message": "Could not connect to the server. Please try again later."}'
@@ -58,7 +57,6 @@ def get_client(client_id):
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
 def update_client(client_id, otp_code, email=None, phone_number=None, address=None):

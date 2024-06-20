@@ -74,12 +74,19 @@ Depending on what you are making, it can be a good idea to include screenshots o
 <br>
 
 ## Configuration
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+1. Clone and cd to repository
+2. In /application, /cli, and /server create a copy of the template .ini file removing the leading template_
+3. Generate sesssion key with generate_seesion_key.py and add to /server/bank.ini
+4. Add SMTP details if required. If SMTP is set to False OTP will not work, but an OTP code is still required. In this case, just enter any 6 digit number in.
+5. Run docker command: docker-compose up -d
+
+
+
 
 <br>
 
 ### Email Configuration
-In order for OTP to work, an SMTP server is needed
+In order for OTP to work, an SMTP server is needed. 
 
 ```ini
 [smtp]
