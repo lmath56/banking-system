@@ -4,4 +4,4 @@
 import configparser
 
 CONFIG = configparser.ConfigParser()
-CONFIG.read("cli/cli.ini")
+CONFIG.read("cli.ini")

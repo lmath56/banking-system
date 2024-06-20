@@ -22,7 +22,7 @@ def clean_otp():
     event_logger(f"Removed {removed_otps} expired OTPs.")
     event_logger("Finished cleaning OTPs.")
 
-schedule.every(300).seconds.do(clean_otp) 
+schedule.every(60).seconds.do(clean_otp) 
 
 thread = threading.Thread(target=run_schedule)
 thread.daemon = True  # Set the thread as a daemon thread

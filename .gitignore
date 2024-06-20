@@ -6,6 +6,7 @@ bank.db
 log.txt
 bank.ini
 app.ini
+cli.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

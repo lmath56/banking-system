@@ -22,10 +22,16 @@ def main():
             print("Username and password are required for login.")
             sys.exit(1)
         response = login(args.username, args.password)
-        print(f"{response.status_code}: {response.content}")
+        if response['success']:
+            print(f"Login successful: {response['message']}")
+        else:
+            print(f"Login failed: {response['message']}")
     elif args.command == 'logout':
         response = logout()
-        print(f"{response.status_code}: {response.content}")
+        if response['success']:
+            print(f"Logout successful: {response['message']}")
+        else:
+            print(f"Check Credentials: {response['message']}")
     else:
         print("Invalid command. Use 'login' or 'logout'.")
 

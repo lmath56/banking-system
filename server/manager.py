@@ -5,13 +5,13 @@ from class_client import Client
 from class_account import Account
 from class_transaction import Transaction
 from emailer import EmailSendingError # Import the EmailSendingError class to handle email sending errors
-from flask import jsonify, session as flask_session  # Imports the Flask modules
 from functools import wraps # For decorators / user login
 from database import * # Importing the database connection
 from emailer import send_email # Importing the emailer function
 from logger import event_logger # Importing the event_logger function
 from flask import session as flask_session
 from flask import request
+from flask import jsonify  # Imports the Flask modules
 from database import session
 import hashlib # For password hashing
 import datetime # For timestamps
