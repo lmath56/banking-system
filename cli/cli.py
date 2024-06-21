@@ -6,16 +6,20 @@ import argparse
 import sys
 from config import CONFIG
 from getpass import getpass
-from connection import login, logout, get_client
+from connection import login, logout, get_client, add_client
 from test_database_generator import generate_test_database 
 
 
 def show_menu():
     print("\nAvailable options:")
-    print("1. Logout")
-    print("2. New user")
-    print("3. Add test users")
-    print("4. Exit")
+    print("1. Logout and exit")
+    print("2. New client")
+    print("3. Add test data to database (50 clients, 2 accounts each, 40 transactions each)")
+    print("4. Initialise Database")
+    #print("5. Promote to Admin")
+    #print("6. Demote from Admin")
+    #print("7. Delete user")S
+    print("\n")
 
 def main():
     parser = argparse.ArgumentParser(description='Banking System CLI Utility')
@@ -37,7 +41,6 @@ def main():
                 args.password = getpass("Enter password: ")
 
             response = login(args.username, args.password)
-            print(response)
             if response['success']: 
                 print(f"Login successful: {response['message']}")  
                 try:
@@ -55,7 +58,7 @@ def main():
                 while True:
                     show_menu()
                     option = input("Choose an option: ")
-                    if option == "1":
+                    if option == "1": # Menu option 1 - Logout and exit
                         response = logout()
                         json_response = response.json()
                         if json_response['success']:  
@@ -64,15 +67,33 @@ def main():
                             print(f"Logout failed: {json_response['message']}")
                         args.username = None
                         args.password = None
-                    elif option == "2":
+
+                    elif option == "2": # Menu option 2 - New client
                         print("New user option selected.")
-                        # Implement new user functionality here
-                    elif option == "3":
+                        name = input("Enter name: ")
+                        birthdate = input("Enter birthdate (YYYY-MM-DD): ")
+                        address = input("Enter address: ")
+                        phone_number = input("Enter phone number: ")
+                        email = input("Enter email: ")
+                        password = input("Enter password: ")
+                        notes = input("Enter notes: ")
+                        response = add_client(name, birthdate, address, phone_number, email, password, notes)
+
+                    elif option == "3": # Menu option 3 - Add test data to database
                         print("Add test users option selected.")
                         generate_test_database(args.username, args.password)
                         
-                    elif option == "4":
-                        print("Exiting...")
+                    elif option == "4": # Menu option 4 - Initialise Database
+                        print("Not implemented yet, exiting...")
+                        break
+                    elif option == "5": # Menu option 5 - Promote to Admin
+                        print("Not implemented yet, exiting...")
+                        break
+                    elif option == "6": # Menu option 6 - Demote from Admin
+                        print("Not implemented yet, exiting...")
+                        break
+                    elif option == "7": # Menu option 7 - Delete user
+                        print("Not implemented yet, exiting...")
                         break
                     else:
                         print("Invalid option. Please try again.")

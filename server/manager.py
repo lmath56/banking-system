@@ -280,7 +280,7 @@ def add_account(client_id:str, description:str, account_type:str, **kwargs):
     new_account = Account(account_id, client_id, description, timestamp(), account_type, 0, 1, notes, None) # Create the new account
     session.add(new_account)
     session.commit()
-    return format_response(True, f"New account has been added: account_id: {account_id}"), 200
+    return format_response(True, account_id), 200
 
 @login_required       
 def update_account(account_id: str, otp_code: str, **kwargs):
@@ -345,7 +345,6 @@ def get_transaction(transaction_id:int):
 @login_required
 def add_transaction(amount: float, account_id: str, recipient_account_id: str, otp_code: int, description: str):
     """Adds a new transaction to the database. If the account is not found, returns an error message."""
-    print(f"Adding transaction: amount: {amount}, account_id: {account_id}, recipient_account_id: {recipient_account_id}, otp_code: {otp_code}, description: {description}")
     current_client_id, is_admin = get_current_client()
     if not is_admin and account_id != current_client_id:
         return format_response(False, "You can only view your own client information."), 403
@@ -374,7 +373,7 @@ def add_transaction(amount: float, account_id: str, recipient_account_id: str, o
     session.add(new_transaction)
     session.commit()
     
-    return format_response(True, f"New transaction has been added: transaction_id: {transaction_id}"), 200
+    return format_response(True, transaction_id), 200
 
 @login_required
 def transaction_history(account_id:int):
@@ -517,7 +516,7 @@ def add_client(name:str, birthdate:str, address:str, phone_number:str, email:str
     session.add(new_client)
     session.commit()
     event_logger(f"New client has been added: client_id: {client_id} by {flask_session['client_id']}.")
-    return format_response(True, f"New client has been added: client_id: {client_id}"), 200
+    return format_response(True, client_id), 200
 
 def initialise_database(password:str, email:str):
     """Initialises the database with an administrator client if no clients exist."""

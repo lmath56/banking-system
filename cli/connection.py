@@ -68,8 +68,32 @@ def get_client(client_id):
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
 
+def get_account(account_id):
+    """Retrieves the account details for the current client."""
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+        response = requests.get(CONFIG["server"]["url"] + "/Account", cookies=session_data['session_cookie'], params={'account_id': account_id})
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+    
+def get_transaction(transaction_id):
+    """Retrieves the transaction details for the given transaction_id."""
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+        response = requests.get(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params={'transaction_id': transaction_id})
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+
 def add_client(name, birthdate, address, phone_number, email, password, notes):
-    data = {
+    params = {
         "name": name,
         "birthdate": birthdate,
         "address": address,
@@ -81,13 +105,53 @@ def add_client(name, birthdate, address, phone_number, email, password, notes):
     try:   
         with open('session_data.json', 'r') as f:
             session_data = json.load(f)
-            response = requests.get(CONFIG["server"]["url"] + "/Client", cookies=session_data['session_cookie'], params=data)  
-            response.raise_for_status()
+            response = requests.post(CONFIG["server"]["url"] + "/Admin/Client", cookies=session_data['session_cookie'], params=params)
         if response.status_code == 200:
-            print("Client retrieved successfully.")
+            return response.json()
         else:   
-            print(f"Failed to retrieve client. Status code: {response.status_code}, message: {response.text}")
+            print(f"Failed to create client. Status code: {response.status_code}, message: {response.text}")
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
-            
+    
+def add_account(client_id, description, account_type, notes):
+    """Adds an account with the given client_id, description, account_type, and notes."""
+    params = {
+        "client_id": client_id,
+        "description": description,
+        "account_type": account_type,
+        "notes": notes
+    }
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+            response = requests.post(CONFIG["server"]["url"] + "/Account", cookies=session_data['session_cookie'], params=params)
+            response.raise_for_status()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Failed to create account. Status code: {response.status_code}, message: {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+    
+def add_transaction(amount, account_id, recipient_account_id, otp_code, description):
+    """Adds a transaction with the given amount, recipient_account_id, otp_code, and description."""
+    params = {
+        "amount": amount,
+        "account_id": account_id,
+        "recipient_account_id": recipient_account_id,
+        "otp_code": otp_code,
+        "description": description}
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+            response = requests.post(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params=params)
+            response.raise_for_status()
+        if response.status_code == 200:
+            print("Transaction created successfully.")
+        else:
+            print(f"Failed to create transaction. Status code: {response.status_code}, message: {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
