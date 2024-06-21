@@ -6,7 +6,7 @@ import argparse
 import sys
 from config import CONFIG
 from getpass import getpass
-from connection import login, logout, get_client, add_client
+from connection import login, logout, get_client, add_client, promote, demote, initialise
 from test_database_generator import generate_test_database 
 
 
@@ -14,17 +14,18 @@ def show_menu():
     print("\nAvailable options:")
     print("1. Logout and exit")
     print("2. New client")
-    print("3. Add test data to database (50 clients, 2 accounts each, 40 transactions each)")
-    print("4. Initialise Database")
-    #print("5. Promote to Admin")
-    #print("6. Demote from Admin")
-    #print("7. Delete user")S
+    print("3. Add test data to database (3 clients, 2 accounts each, 3 transactions each)")
+    print("4. Promote to Admin")
+    print("5. Demote from Admin")
+    #print("6. Delete user")
     print("\n")
 
 def main():
     parser = argparse.ArgumentParser(description='Banking System CLI Utility')
     parser.add_argument('-u', '--username', type=str, default=CONFIG["client"]["default_id"], help='Username for login')
     parser.add_argument('-p', '--password', type=str, default=CONFIG["client"]["default_password"], help='Password for login')
+    parser.add_argument('-e', '--email', type=str, help='Email for initialisation')
+    parser.add_argument('-init', '--initialise', action='store_true', help='Initialise the system')
 
     subparsers = parser.add_subparsers(dest='command')
 
@@ -33,6 +34,17 @@ def main():
 
     args = parser.parse_args()
 
+    if args.initialise:
+        if not args.email or not args.password:
+            print("Email and password are required for initialisation.")
+            sys.exit(1)
+        response = initialise(args.password, args.email)
+        if response['success']:
+            print(f"Initialisation successful: {response['message']}")
+        else:
+            print(f"Initialisation failed: {response['message']}")
+        return
+    
     if not args.command:
         while True:
             if not args.username:
@@ -78,21 +90,34 @@ def main():
                         password = input("Enter password: ")
                         notes = input("Enter notes: ")
                         response = add_client(name, birthdate, address, phone_number, email, password, notes)
+                        if response['success']:
+                            print(f"Client added successfully: {response['message']}")
+                        else:
+                            print(f"Client addition failed: {response['message']}")
 
                     elif option == "3": # Menu option 3 - Add test data to database
                         print("Add test users option selected.")
                         generate_test_database(args.username, args.password)
                         
-                    elif option == "4": # Menu option 4 - Initialise Database
-                        print("Not implemented yet, exiting...")
-                        break
-                    elif option == "5": # Menu option 5 - Promote to Admin
-                        print("Not implemented yet, exiting...")
-                        break
-                    elif option == "6": # Menu option 6 - Demote from Admin
-                        print("Not implemented yet, exiting...")
-                        break
-                    elif option == "7": # Menu option 7 - Delete user
+                    elif option == "4": # Menu option 4 - Promote to Admin
+                        print("Enter the client ID to promote to Admin:")
+                        client_id = input("Enter client ID: ")
+                        response = promote(client_id)
+                        if response['success']:
+                            print(f"Promotion successful: {response['message']}")
+                        else:
+                            print(f"Promotion failed: {response['message']}")
+
+                    elif option == "5": # Menu option 5 - Demote from Admin
+                        print("Enter the client ID to demote from Admin:")
+                        client_id = input("Enter client ID: ")
+                        response = demote(client_id)
+                        if response['success']:
+                            print(f"Demotion successful: {response['message']}")
+                        else:
+                            print(f"Demotion failed: {response['message']}") 
+
+                    elif option == "6": # Menu option 6 - Delete user
                         print("Not implemented yet, exiting...")
                         break
                     else:

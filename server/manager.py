@@ -159,7 +159,6 @@ def generate_otp(client_id: str):
             send_email(email, "Luxbank One Time Password", f"Your one-time password is: {password}")
             otps[client_id] = (password, time.time())  # Store the OTP and the current time
             event_logger(f"OTP Code {password} emailed to {email}")
-            print(f"OTP Code {password} emailed to {email}")
             return format_response(True, "OTP generated and sent successfully."), 200
         except EmailSendingError as e:
             event_logger(f"Error sending email: {str(e)}")
@@ -477,7 +476,7 @@ def delete_transaction(transaction_id:int):
     return format_response(False, "Transaction not found."), 404
 
 @admin_required
-def modify_balance(transaction_id:int, amount:int):
+def modify_transaction_amount(transaction_id:str, amount:float):
     """Modifies the amount of a transaction in the database. If the transaction is not found, returns an error message."""
     for transaction in session.query(Transaction).all():
         if transaction.transaction_id == transaction_id:
@@ -486,6 +485,17 @@ def modify_balance(transaction_id:int, amount:int):
             event_logger(f"Transaction ID: {transaction_id} has been modified by {flask_session['client_id']}.")
             return format_response(True, f"Transaction ID: {transaction_id} has been modified."), 200
     return format_response(False, "Transaction not found."), 404
+
+@admin_required
+def modify_balance(account_id:str, balance:float):
+    """Modifies the balance of an account in the database. If the account is not found, returns an error message."""
+    for account in session.query(Account).all():
+        if account.account_id == account_id:
+            account.balance = balance
+            session.commit()
+            event_logger(f"Account ID: {account_id} has been modified by {flask_session['client_id']}.")
+            return format_response(True, f"Account ID: {account_id} has been modified."), 200
+    return format_response(False, "Account not found."), 404
 
 @admin_required
 def test_account_balances():

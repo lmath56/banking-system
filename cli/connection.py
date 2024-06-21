@@ -132,7 +132,6 @@ def add_account(client_id, description, account_type, notes):
         else:
             print(f"Failed to create account. Status code: {response.status_code}, message: {response.text}")
     except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
         return {'success': False, 'message': "Could not connect to the server. Please try again later."}
     
 def add_transaction(amount, account_id, recipient_account_id, otp_code, description):
@@ -149,9 +148,72 @@ def add_transaction(amount, account_id, recipient_account_id, otp_code, descript
             response = requests.post(CONFIG["server"]["url"] + "/Transaction", cookies=session_data['session_cookie'], params=params)
             response.raise_for_status()
         if response.status_code == 200:
-            print("Transaction created successfully.")
+            pass
         else:
             print(f"Failed to create transaction. Status code: {response.status_code}, message: {response.text}")
     except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
-        return {'success': False, 'message': "Could not connect to the server. Please try again later."}
+        return {'success': False, 'message': {e}}
+    
+def modify_balance(account_id, balance):
+    """Modifies the balance of the account with the given account_id."""
+    params = {
+        "account_id": account_id,
+        "balance": balance
+    }
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+            response = requests.put(CONFIG["server"]["url"] + "/Admin/Balance", cookies=session_data['session_cookie'], params=params)
+            response.raise_for_status()
+        if response.status_code == 200:
+            print("Balance modified successfully.")
+        else:
+            print(f"Failed to modify balance. Status code: {response.status_code}, message: {response.text}")
+    except requests.exceptions.RequestException as e:
+        return {'success': False, 'message': {e}}
+    
+def promote(client_id):
+    """Promotes the client with the given client_id to an admin."""
+    params = {
+        "client_id": client_id
+    }
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+            response = requests.put(CONFIG["server"]["url"] + "/Admin/Promote", cookies=session_data['session_cookie'], params=params)
+            response.raise_for_status()
+        return {'success': True, 'message': 'Promotion successful.'}
+    except Exception as e:
+        return {'success': False, 'message': str(e)}
+    
+def demote(client_id):
+    """Demotes the client with the given client_id from an admin."""
+    params = {
+        "client_id": client_id
+    }
+    try:
+        with open('session_data.json', 'r') as f:
+            session_data = json.load(f)
+            response = requests.put(CONFIG["server"]["url"] + "/Admin/Demote", cookies=session_data['session_cookie'], params=params)
+            response.raise_for_status()
+        return {'success': True, 'message': 'Promotion successful.'}
+    except Exception as e:
+        return {'success': False, 'message': str(e)}
+    
+def initialise(password, email):
+    """Initialises the database with a default admin account."""
+    params = {
+        "password": password,
+        "email": email
+    }
+    try:
+        response = requests.get(CONFIG["server"]["url"] + "/System/Initialise", params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 400:
+            return {'success': False, 'message': 'Database not empty, this function cannot be used'}
+        else:
+            return {'success': False, 'message': str(e)}
+    except requests.exceptions.RequestException as e:
+        return {'success': False, 'message': str(e)}

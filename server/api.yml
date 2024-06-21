@@ -564,6 +564,34 @@ paths:
           description: Invalid input
         '404':
           description: No accounts found
+  /Admin/Balance:
+    put:
+      tags:
+        - admin
+      summary: Modify account balance
+      description: Modify account balance
+      operationId: manager.modify_balance
+      parameters:
+        - name: account_id
+          in: query
+          description: ID of account to modify
+          required: true
+          schema:
+            type: string
+        - name: balance
+          in: query
+          description: Amount to modify balance by
+          required: true
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid input
+        '404':
+          description: Account not found
   /Admin/Transactions:
     get:
       tags:
@@ -625,7 +653,7 @@ paths:
             description: Invalid input
           '401':
             description: Unauthorised
-  /Admin/Balance:
+  /Admin/TestBalance:
     get:
       tags:
         - admin
